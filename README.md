@@ -12,29 +12,17 @@ This research project explores solving the **Electric Vehicle Routing Problem (E
 ## Staged Methodology Pipeline
 
 ```
-VRP
+VRP (Classical Baseline)
   ↓
-QUBO Formulation
+QUBO Formulation (Coming Soon)
   ↓
-QAOA Optimization
+QAOA Optimization (Coming Soon)
   ↓
-RL Optimizes QAOA Parameters (Gamma, Beta)
+RL Optimizes QAOA Parameters (Gamma, Beta) (Coming Soon)
   ↓
-Reproduce / Validate Base RL-QAOA VRP Approach (Phase 1)
+Extend VRP to EVRP (Phase 2) (Coming Soon)
   ↓
-Extend VRP to EVRP (Phase 2)
-  ↓
-Add EV-Specific Constraints (Battery, Energy, Charging)
-  ↓
-Extended EVRP QUBO
-  ↓
-QAOA + RL Pipeline
-  ↓
-Feasible EV Routing Solutions
-  ↓
-Evaluation & Benchmarking (Phase 3)
-  ↓
-Limitation Analysis & Refinements (Phase 4)
+Evaluation & Benchmarking (Phase 3) (Coming Soon)
 ```
 
 ---
@@ -50,47 +38,80 @@ quantum-evrp/
 ├── configs/                  # Configuration files (YAML)
 │   └── default_config.yaml
 ├── data/                     # Datasets
-│   ├── raw/                  # Original, immutable datasets
-│   └── processed/            # Cleaned / formatted datasets
-├── src/                      # Core source code package
+├── examples/                 # Demonstration scripts
+│   └── demo_vrp_foundation.py
+├── frontend/                 # React + Vite Dashboard
+│   ├── src/
+│   │   ├── components/       # Route visualizer & UI components
+│   │   ├── utils/            # VRP client-side logic
+│   │   ├── App.jsx           # Main dashboard UI
+│   │   └── index.css         # Styling system
+│   └── package.json
+├── src/                      # Core Python source code package
 │   ├── data/                 # Dataset loading and parsing
-│   ├── vrp/                  # VRP distance matrices and route structures
+│   ├── vrp/                  # VRP distance matrices, route & validator
 │   ├── qubo/                 # QUBO formulation & matrix generation
 │   ├── qaoa/                 # QAOA circuit construction & execution
 │   ├── rl/                   # Reinforcement Learning environments & agents
 │   ├── evrp/                 # EV-specific constraints & feasibility checks
 │   ├── evaluation/           # Metrics, benchmarking & plotting
 │   └── utils/                # Utility modules (config, logger, seed)
-├── notebooks/                # Exploratory notebooks (no core logic)
+├── notebooks/                # Exploratory notebooks (01_vrp_foundation.ipynb)
 ├── tests/                    # Unit and integration test suite
-├── results/                  # Generated benchmark results & plots
-└── docs/                     # Documentation & mathematical formulations
+└── results/                  # Generated benchmark results & plots
 ```
 
 ---
 
-## Getting Started
+## How to Run the Project
 
-### Prerequisites
-- Python 3.9+
+### 1. Launching the Web Dashboard (Frontend)
 
-### Setup Environment
+To run the interactive React + Vite web dashboard locally:
+
 ```bash
-# Clone or navigate to directory
-cd quantum-evrp
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install package in editable mode with dependencies
-pip install -e .
+cd frontend
+npm install
+npm run dev
 ```
 
-### Running Tests
+Open your browser at `http://localhost:5173/` to view:
+- **Header & Subtitle**: Hybrid Quantum-Classical Optimization branding
+- **Project Overview**: VRP, EVRP, QUBO, QAOA, RL concepts
+- **VRP Demo**: Interactive 2D route graph visualizer, customer table, distance matrix, and payload validation
+- **Methodology Pipeline**: Visual pipeline with "Coming Soon" badges
+- **Status Table**: Current module implementation progress
+
+---
+
+### 2. Running Python Unit Tests
+
+To execute the test suite verifying distance matrix symmetry, zero diagonal, route costs, depot start/end checks, and vehicle capacity bounds:
+
 ```bash
-pytest tests/
+python tests/run_tests.py
 ```
+
+---
+
+### 3. Running the Python Demonstration Script
+
+To run the terminal-based classical VRP demonstration:
+
+```bash
+python examples/demo_vrp_foundation.py
+```
+
+---
+
+## Current Status
+
+- **Classical VRP Foundation**: ✅ Complete
+- **QUBO Formulation**: 🔲 Not implemented (Coming Soon)
+- **QAOA Solver**: 🔲 Not implemented (Coming Soon)
+- **Reinforcement Learning**: 🔲 Not implemented (Coming Soon)
+- **EVRP Extension**: 🔲 Not implemented (Coming Soon)
+- **Evaluation**: 🔲 Not implemented (Coming Soon)
 
 ---
 
