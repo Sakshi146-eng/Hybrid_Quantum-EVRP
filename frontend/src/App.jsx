@@ -24,6 +24,7 @@ import {
 import {
   getDeterministicToyInstance,
   generateSyntheticInstance,
+  validateVRPInstanceConfig,
 } from './utils/vrpLogic';
 import { runClassicalSolver } from './utils/solverApi';
 import RouteVisualizer from './components/RouteVisualizer';
@@ -59,35 +60,39 @@ export default function App() {
   // Generate VRP Instance Data
   const handleGenerateInstance = () => {
     let inst;
+    const numericCap = parseFloat(capacity) || 0.0;
+
     if (mode === 'synthetic') {
-      inst = generateSyntheticInstance(numCustomers, capacity);
+      inst = generateSyntheticInstance(numCustomers, numericCap);
       showToast(`Generated random synthetic VRP instance with ${numCustomers} customers.`, 'success');
     } else {
-      inst = getDeterministicToyInstance(numCustomers, capacity);
+      inst = getDeterministicToyInstance(numCustomers, numericCap);
       showToast(`Loaded deterministic ${numCustomers}-customer VRP toy instance.`, 'info');
     }
     setInstance(inst);
     setSolution(null); // Clear previous solution on instance change
   };
 
+  // Auto-generate on initial render or mode/customer count/capacity change
   useEffect(() => {
     handleGenerateInstance();
-  }, [numCustomers, mode]);
+  }, [numCustomers, mode, capacity]);
+
+  // Evaluate instance configuration feasibility
+  const configValidation = instance ? validateVRPInstanceConfig(instance) : { isValid: true, errors: [] };
 
   // Run Selected Classical Solver
   const handleRunAlgorithm = async () => {
     if (!instance) return;
 
-    // Ensure instance vehicleCapacity matches current input
-    const currentInst = {
-      ...instance,
-      vehicleCapacity: parseFloat(capacity) || 10.0,
-    };
-    setInstance(currentInst);
+    if (!configValidation.isValid) {
+      showToast(configValidation.errors[0], 'error');
+      return;
+    }
 
     setIsRunning(true);
     try {
-      const sol = await runClassicalSolver(selectedAlgorithm, currentInst, {
+      const sol = await runClassicalSolver(selectedAlgorithm, instance, {
         populationSize: parseInt(gaPopSize, 10) || 50,
         generations: parseInt(gaGenerations, 10) || 100,
         crossoverRate: parseFloat(gaCrossoverRate) || 0.8,
@@ -96,7 +101,7 @@ export default function App() {
 
       setSolution(sol);
       if (sol.feasible) {
-        showToast(`${sol.algorithm_name} solved instance! Distance: ${sol.total_distance} units. Feasible ✓`, 'success');
+        showToast(`${sol.algorithm_name} solved instance! Distance: ${sol.total_distance} units. Feasible Solution ✓`, 'success');
       } else {
         showToast(`${sol.algorithm_name} produced infeasible route.`, 'warning');
       }
@@ -161,7 +166,7 @@ export default function App() {
       {/* 2. CLASSICAL VRP SOLVER SECTION */}
       <section className="section">
         <h3 className="section-title">
-          <Cpu className="section-title-icon" size={24} /> Classical VRP Solver Baseline
+          <Cpu className="section-title-icon" size={24} /> Classical VRP Baseline Solver
         </h3>
 
         <div className="demo-container">
@@ -215,7 +220,7 @@ export default function App() {
 
             {/* Vehicle Capacity Input */}
             <div className="form-group">
-              <label className="form-label">Vehicle Capacity (Payload Limit)</label>
+              <label className="form-label">Vehicle Capacity</label>
               <input
                 type="number"
                 step="1"
@@ -234,7 +239,7 @@ export default function App() {
               {mode === 'synthetic' ? <Shuffle size={18} /> : <RotateCcw size={18} />} Generate New Instance
             </button>
 
-            {/* GA Parameters Accordion/Controls */}
+            {/* GA Parameters */}
             {selectedAlgorithm === 'ga' && (
               <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--primary-cyan)', fontWeight: '600' }}>
@@ -291,12 +296,22 @@ export default function App() {
               </div>
             )}
 
+            {/* Infeasibility Warning Banner if Capacity / Demands invalid */}
+            {!configValidation.isValid && (
+              <div style={{ marginBottom: '1rem', padding: '0.85rem 1rem', background: 'rgba(244,63,94,0.12)', border: '1px solid #f43f5e', borderRadius: '0.6rem', color: '#fb7185', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                <div style={{ fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <AlertTriangle size={16} /> Instance Infeasible
+                </div>
+                {configValidation.errors[0]}
+              </div>
+            )}
+
             {/* Primary Action Button */}
             <button
               className="btn btn-primary"
-              style={{ width: '100%' }}
+              style={{ width: '100%', opacity: !configValidation.isValid || isRunning ? 0.5 : 1.0, cursor: !configValidation.isValid || isRunning ? 'not-allowed' : 'pointer' }}
               onClick={handleRunAlgorithm}
-              disabled={isRunning}
+              disabled={!configValidation.isValid || isRunning}
             >
               <Play size={18} /> {isRunning ? 'Running Optimization...' : 'Run Algorithm'}
             </button>
@@ -304,7 +319,7 @@ export default function App() {
 
           {/* Right Panel: Instance Info + Results + Visualization */}
           <div className="display-panel">
-            {/* Instance Specifications Card (Section 6) */}
+            {/* Instance Specifications Card (Correct Terminology: Section 1 & 6) */}
             {instance && (
               <div className="card" style={{ background: '#0f172a' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#f8fafc', fontWeight: '700', fontFamily: 'var(--font-heading)' }}>
@@ -313,15 +328,15 @@ export default function App() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', fontSize: '0.875rem' }}>
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Customers</span>
-                    <strong>{instance.numCustomers} nodes</strong>
+                    <strong>{instance.numCustomers}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles Limit</span>
-                    <strong>{instance.numNodes > 4 ? 2 : 1} available</strong>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles</span>
+                    <strong>{instance.numVehicles}</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicle Capacity</span>
-                    <strong>{instance.vehicleCapacity} payload</strong>
+                    <strong>{instance.vehicleCapacity} units</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Depot Location</span>
@@ -329,12 +344,12 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
-                  <strong>Demands:</strong> {instance.nodes.map(n => n.id === 0 ? null : `C${n.id}: ${n.demand}t`).filter(Boolean).join(' | ')}
+                  <strong>Customer Demands:</strong> {instance.nodes.map(n => n.id === 0 ? null : `C${n.id}: ${n.demand} units`).filter(Boolean).join(' | ')}
                 </div>
               </div>
             )}
 
-            {/* Results Panel & 2D Visualization (Section 3, 4, 5) */}
+            {/* Results Panel & 2D Visualization (Section 4, 5, 7) */}
             <div className="visualizer-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: '#f8fafc' }}>
@@ -357,13 +372,13 @@ export default function App() {
                 )}
               </div>
 
-              {/* SVG Visualizer */}
+              {/* Dynamic SVG Visualizer */}
               <RouteVisualizer
                 instance={instance}
                 routes={solution ? solution.routes : []}
               />
 
-              {/* Standardized VRPSolution Results Display */}
+              {/* VRPSolution Results Display */}
               {solution ? (
                 <div style={{ marginTop: '1.25rem' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
@@ -389,16 +404,16 @@ export default function App() {
                     </div>
 
                     <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Vehicles Used</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f8fafc' }}>
-                        {solution.routes.length} vehicle(s)
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Feasible</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: solution.feasible ? '#34d399' : '#fb7185' }}>
+                        {solution.feasible ? 'YES' : 'NO'}
                       </div>
                     </div>
                   </div>
 
                   {/* Vehicle Routes & Payload Breakdown */}
                   <h5 style={{ fontFamily: 'var(--font-heading)', fontSize: '0.95rem', marginBottom: '0.75rem', color: '#e2e8f0' }}>
-                    Vehicle Route & Payload Breakdown
+                    Vehicle Route Breakdown ({solution.routes.length} vehicle(s))
                   </h5>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {solution.routes.map((r, rIdx) => (
@@ -425,7 +440,7 @@ export default function App() {
                           </span>
                         </div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                          Payload Load: <strong>{solution.vehicle_loads[rIdx] || 0} / {instance.vehicleCapacity}</strong>
+                          Load: <strong>{solution.vehicle_loads[rIdx] || 0} / {instance.vehicleCapacity} units</strong>
                         </div>
                       </div>
                     ))}
@@ -438,14 +453,14 @@ export default function App() {
               )}
             </div>
 
-            {/* Pairwise Distance Matrix Table (Section 7) */}
+            {/* Pairwise Distance Matrix Table */}
             {instance && (
               <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
                   <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Grid size={18} color="var(--primary-cyan)" /> Pairwise Euclidean Distance Matrix (N x N)
                   </h4>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Values in coordinate distance units</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Values represent pairwise Euclidean distances between nodes</span>
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>

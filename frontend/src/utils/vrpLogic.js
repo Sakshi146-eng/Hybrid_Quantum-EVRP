@@ -1,6 +1,6 @@
 /**
  * Frontend JavaScript implementation of Classical VRP toy instances & distance calculations.
- * Supports both fixed deterministic instances and random synthetic instance generation.
+ * Exactly mirrors backend src/data/loader.py and src/vrp/instance.py logic.
  */
 
 export function getDeterministicToyInstance(numCustomers = 3, vehicleCapacity = 10.0) {
@@ -42,7 +42,6 @@ export function generateSyntheticInstance(numCustomers = 3, vehicleCapacity = 10
   ];
 
   for (let i = 1; i <= numCustomers; i++) {
-    // Random coordinates between 0.5 and 5.0
     const rx = parseFloat((Math.random() * 5.0).toFixed(1));
     const ry = parseFloat((Math.random() * 5.0).toFixed(1));
     const rdemand = parseFloat((Math.floor(Math.random() * 4) + 1).toFixed(1));
@@ -61,7 +60,7 @@ export function generateSyntheticInstance(numCustomers = 3, vehicleCapacity = 10
 
 function buildInstanceFromNodes(nodes, numCustomers, vehicleCapacity) {
   const numNodes = nodes.length;
-  const demands = nodes.map(n => n.demand);
+  const demands = nodes.map((n) => n.demand);
   const distanceMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(0));
 
   for (let i = 0; i < numNodes; i++) {
@@ -72,22 +71,56 @@ function buildInstanceFromNodes(nodes, numCustomers, vehicleCapacity) {
     }
   }
 
-  // Default candidate route visiting all customers sequentially
-  const candidateRoute = [0];
-  for (let i = 1; i < numNodes; i++) {
-    candidateRoute.push(i);
-  }
-  candidateRoute.push(0);
+  const numVehicles = numCustomers > 3 ? 2 : 1;
 
   return {
     numNodes,
     numCustomers,
+    numVehicles,
     depotIdx: 0,
     vehicleCapacity: parseFloat(vehicleCapacity) || 10.0,
     nodes,
     demands,
     distanceMatrix,
-    candidateRoute,
+  };
+}
+
+/**
+ * Validates instance feasibility prior to algorithm execution.
+ * Enforces:
+ * 1. vehicle_capacity >= max_customer_demand
+ * 2. num_vehicles * vehicle_capacity >= total_customer_demand
+ */
+export function validateVRPInstanceConfig(instance) {
+  if (!instance || !instance.demands) {
+    return { isValid: false, errors: ['Invalid instance data'] };
+  }
+
+  const { numCustomers, vehicleCapacity, numVehicles, demands } = instance;
+  const customerDemands = demands.slice(1);
+  const maxDemand = customerDemands.length > 0 ? Math.max(...customerDemands) : 0;
+  const totalDemand = customerDemands.reduce((a, b) => a + b, 0);
+  const maxFleetCapacity = numVehicles * vehicleCapacity;
+
+  const errors = [];
+
+  if (vehicleCapacity < maxDemand) {
+    errors.push(
+      `Invalid configuration: vehicle capacity (${vehicleCapacity}) is smaller than the largest customer demand (${maxDemand}).`
+    );
+  } else if (maxFleetCapacity < totalDemand) {
+    errors.push(
+      `Instance infeasible: total demand (${totalDemand}) exceeds total vehicle capacity (${maxFleetCapacity}).`
+    );
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    maxDemand,
+    totalDemand,
+    numVehicles,
+    maxFleetCapacity,
   };
 }
 
@@ -108,7 +141,6 @@ export function evaluateRoute(instance, route) {
   let dist = 0;
   let totalDemand = 0;
 
-  // Check valid integer node indices
   for (let i = 0; i < route.length; i++) {
     const node = route[i];
     if (typeof node !== 'number' || isNaN(node) || node < 0 || node >= instance.numNodes) {
@@ -131,7 +163,6 @@ export function evaluateRoute(instance, route) {
     errors.push(`Route must start and end at depot (index ${depotIdx}), got start=${route[0]}, end=${route[route.length - 1]}.`);
   }
 
-  // Calculate distance and demand
   for (let i = 0; i < route.length; i++) {
     const node = route[i];
     if (node !== depotIdx) {

@@ -4,13 +4,19 @@
  * Prepared for clean integration with future Python backend API endpoints.
  */
 
-import { evaluateRoute } from './vrpLogic';
+import { evaluateRoute, validateVRPInstanceConfig } from './vrpLogic';
 
 /**
  * Runs a Genetic Algorithm on a given VRPInstance object using client-side JS implementation
  * matching Python's GeneticAlgorithmSolver logic.
  */
 export function runGeneticAlgorithm(instance, config = {}) {
+  // First check instance configuration feasibility
+  const configVal = validateVRPInstanceConfig(instance);
+  if (!configVal.isValid) {
+    throw new Error(configVal.errors[0]);
+  }
+
   const {
     populationSize = 50,
     generations = 100,
@@ -22,7 +28,6 @@ export function runGeneticAlgorithm(instance, config = {}) {
 
   const startTime = performance.now();
 
-  const numCustomers = instance.numCustomers;
   const customerIndices = instance.nodes
     .filter((n) => n.id !== instance.depotIdx)
     .map((n) => n.id);
@@ -46,7 +51,7 @@ export function runGeneticAlgorithm(instance, config = {}) {
   let bestDistance = Infinity;
   const historyDistance = [];
 
-  // Helper: Decode chromosome to vehicle routes (Greedy Split)
+  // Helper: Decode chromosome to vehicle routes (Greedy Capacity Split)
   const decodeChromosome = (chrom) => {
     const depot = instance.depotIdx;
     const cap = instance.vehicleCapacity;
@@ -89,6 +94,10 @@ export function runGeneticAlgorithm(instance, config = {}) {
       }
     }
 
+    if (instance.numVehicles && rts.length > instance.numVehicles) {
+      totalPenalty += (rts.length - instance.numVehicles) * 1000;
+    }
+
     const fitness = 1.0 / (totalDist + totalPenalty + 1e-6);
     return { fitness, totalDist, routes: rts };
   };
@@ -108,7 +117,7 @@ export function runGeneticAlgorithm(instance, config = {}) {
     }
     historyDistance.push(bestDistance);
 
-    // Elitism: sort by fitness descending
+    // Elitism
     const indices = Array.from({ length: populationSize }, (_, idx) => idx);
     indices.sort((a, b) => fitnesses[b] - fitnesses[a]);
 
@@ -166,8 +175,12 @@ function formatVRPSolution(algorithmName, routes, instance, runtimeSeconds, meta
     }
   }
 
-  // Check all customers visited
+  // Check all customers visited exactly once
   if (visitedCustomers.size !== instance.numCustomers) {
+    isFeasible = false;
+  }
+
+  if (instance.numVehicles && routes.length > instance.numVehicles) {
     isFeasible = false;
   }
 
