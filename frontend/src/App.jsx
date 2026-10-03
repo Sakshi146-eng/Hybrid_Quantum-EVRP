@@ -19,11 +19,14 @@ import {
   Sliders,
   Database,
   Grid,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 
 import {
   getDeterministicToyInstance,
-  generateSyntheticInstance,
+  generateRandomCustomers,
+  buildInstanceFromNodes,
   validateVRPInstanceConfig,
 } from './utils/vrpLogic';
 import { runClassicalSolver } from './utils/solverApi';
@@ -31,20 +34,27 @@ import RouteVisualizer from './components/RouteVisualizer';
 
 export default function App() {
   // Instance Controls State
-  const [numCustomers, setNumCustomers] = useState(3);
-  const [capacity, setCapacity] = useState(10.0);
-  const [mode, setMode] = useState('deterministic');
+  const [numCustomers, setNumCustomers] = useState(5); // Default 5 (5-20 supported)
+  const [numVehicles, setNumVehicles] = useState(2);
+  const [capacity, setCapacity] = useState(15.0);
+
+  // Depot Coordinates
+  const [depotX, setDepotX] = useState(0.0);
+  const [depotY, setDepotY] = useState(0.0);
+
+  // Customer Nodes Array State
+  const [customerNodes, setCustomerNodes] = useState([]);
 
   // Selected Algorithm State
   const [selectedAlgorithm, setSelectedAlgorithm] = useState('ga');
 
-  // GA Hyperparameter State
+  // GA Hyperparameters
   const [gaPopSize, setGaPopSize] = useState(50);
   const [gaGenerations, setGaGenerations] = useState(100);
   const [gaCrossoverRate, setGaCrossoverRate] = useState(0.8);
   const [gaMutationRate, setGaMutationRate] = useState(0.2);
 
-  // Core VRP Data & Solution State
+  // Solution & Toast State
   const [instance, setInstance] = useState(null);
   const [solution, setSolution] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -57,36 +67,60 @@ export default function App() {
     }, 4000);
   };
 
-  // Generate VRP Instance Data
-  const handleGenerateInstance = () => {
-    let inst;
-    const numericCap = parseFloat(capacity) || 0.0;
+  // Initialize or update customer nodes when numCustomers changes
+  useEffect(() => {
+    const baseInst = getDeterministicToyInstance(numCustomers, capacity, numVehicles);
+    // Extract customer nodes (excluding depot)
+    const custs = baseInst.nodes.filter((n) => n.id !== 0);
+    setCustomerNodes(custs);
+  }, [numCustomers]);
 
-    if (mode === 'synthetic') {
-      inst = generateSyntheticInstance(numCustomers, numericCap);
-      showToast(`Generated random synthetic VRP instance with ${numCustomers} customers.`, 'success');
-    } else {
-      inst = getDeterministicToyInstance(numCustomers, numericCap);
-      showToast(`Loaded deterministic ${numCustomers}-customer VRP toy instance.`, 'info');
-    }
+  // Re-build VRPInstance whenever nodes, depot, capacity, or numVehicles change
+  useEffect(() => {
+    const fullNodes = [
+      { id: 0, type: 'Depot', x: parseFloat(depotX) || 0.0, y: parseFloat(depotY) || 0.0, demand: 0.0 },
+      ...customerNodes.map((c, i) => ({
+        id: i + 1,
+        type: `Cust ${i + 1}`,
+        x: parseFloat(c.x) || 0.0,
+        y: parseFloat(c.y) || 0.0,
+        demand: parseFloat(c.demand) || 0.0,
+      })),
+    ];
+
+    const inst = buildInstanceFromNodes(fullNodes, customerNodes.length, capacity, numVehicles);
     setInstance(inst);
-    setSolution(null); // Clear previous solution on instance change
+  }, [customerNodes, depotX, depotY, capacity, numVehicles]);
+
+  // Handle Customer Table Cell Editing
+  const handleCustomerChange = (index, field, value) => {
+    const updated = [...customerNodes];
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
+    setCustomerNodes(updated);
+    setSolution(null);
   };
 
-  // Auto-generate on initial render or mode/customer count/capacity change
-  useEffect(() => {
-    handleGenerateInstance();
-  }, [numCustomers, mode, capacity]);
+  // Generate Random Customer Coordinates while preserving editable table
+  const handleGenerateRandomCustomers = () => {
+    const newInst = generateRandomCustomers(numCustomers, capacity, numVehicles, depotX, depotY);
+    const custs = newInst.nodes.filter((n) => n.id !== 0);
+    setCustomerNodes(custs);
+    setSolution(null);
+    showToast(`Generated random customer coordinates for ${numCustomers} customers.`, 'success');
+  };
 
-  // Evaluate instance configuration feasibility
-  const configValidation = instance ? validateVRPInstanceConfig(instance) : { isValid: true, errors: [] };
+  // Instance Configuration Feasibility Validation
+  const configVal = instance ? validateVRPInstanceConfig(instance) : { isValid: true, errors: [] };
 
   // Run Selected Classical Solver
   const handleRunAlgorithm = async () => {
     if (!instance) return;
 
-    if (!configValidation.isValid) {
-      showToast(configValidation.errors[0], 'error');
+    if (!configVal.isValid) {
+      showToast(configVal.errors[0], 'error');
       return;
     }
 
@@ -154,7 +188,7 @@ export default function App() {
       {/* 1. PROJECT HEADER */}
       <header className="header">
         <div className="header-badge">
-          <Sparkles size={16} /> Classical VRP Baseline & Genetic Algorithm Operational
+          <Sparkles size={16} /> VRP Simulator & Classical GA Baseline Operational
         </div>
         <h1 className="header-title">Quantum-Assisted Electric Vehicle Routing</h1>
         <h2 className="header-subtitle">Using Hybrid Optimization</h2>
@@ -163,20 +197,20 @@ export default function App() {
         </p>
       </header>
 
-      {/* 2. CLASSICAL VRP SOLVER SECTION */}
+      {/* 2. CLASSICAL VRP SIMULATOR CONTROLS & INSTANCE BUILDER */}
       <section className="section">
         <h3 className="section-title">
-          <Cpu className="section-title-icon" size={24} /> Classical VRP Baseline Solver
+          <Cpu className="section-title-icon" size={24} /> VRP Simulator & Instance Configuration
         </h3>
 
         <div className="demo-container">
           {/* Controls Panel */}
           <div className="control-panel">
             <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', marginBottom: '1.25rem', color: '#f8fafc' }}>
-              Solver & Instance Controls
+              Instance Configuration
             </h4>
 
-            {/* Algorithm Dropdown */}
+            {/* Algorithm Selector */}
             <div className="form-group">
               <label className="form-label">Select Classical Algorithm</label>
               <select
@@ -191,36 +225,39 @@ export default function App() {
               </select>
             </div>
 
-            {/* VRP Instance Selector */}
+            {/* Number of Customers Slider (5 - 20) */}
             <div className="form-group">
-              <label className="form-label">VRP Instance Size</label>
-              <select
-                className="form-select"
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label className="form-label">Number of Customers</label>
+                <strong style={{ color: 'var(--primary-cyan)', fontSize: '0.9rem' }}>{numCustomers}</strong>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="20"
+                step="1"
+                style={{ width: '100%', accentColor: 'var(--primary-cyan)' }}
                 value={numCustomers}
                 onChange={(e) => setNumCustomers(parseInt(e.target.value, 10))}
-              >
-                <option value={3}>3 Customers (4 Nodes Total)</option>
-                <option value={4}>4 Customers (5 Nodes Total)</option>
-                <option value={5}>5 Customers (6 Nodes Total)</option>
-              </select>
+              />
             </div>
 
-            {/* Instance Data Mode */}
+            {/* Number of Vehicles */}
             <div className="form-group">
-              <label className="form-label">Instance Data Source</label>
-              <select
-                className="form-select"
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
-              >
-                <option value="deterministic">Deterministic Toy Instance</option>
-                <option value="synthetic">Random Synthetic Generator</option>
-              </select>
+              <label className="form-label">Number of Vehicles</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                className="form-input"
+                value={numVehicles}
+                onChange={(e) => setNumVehicles(parseInt(e.target.value, 10) || 1)}
+              />
             </div>
 
-            {/* Vehicle Capacity Input */}
+            {/* Vehicle Capacity */}
             <div className="form-group">
-              <label className="form-label">Vehicle Capacity</label>
+              <label className="form-label">Vehicle Capacity (units)</label>
               <input
                 type="number"
                 step="1"
@@ -231,15 +268,38 @@ export default function App() {
               />
             </div>
 
+            {/* Depot Coordinates */}
+            <div className="form-group">
+              <label className="form-label">Depot Coordinates (X, Y)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <input
+                  type="number"
+                  step="0.5"
+                  className="form-input"
+                  placeholder="X"
+                  value={depotX}
+                  onChange={(e) => setDepotX(e.target.value)}
+                />
+                <input
+                  type="number"
+                  step="0.5"
+                  className="form-input"
+                  placeholder="Y"
+                  value={depotY}
+                  onChange={(e) => setDepotY(e.target.value)}
+                />
+              </div>
+            </div>
+
             <button
               className="btn btn-secondary"
               style={{ width: '100%', marginBottom: '1rem' }}
-              onClick={handleGenerateInstance}
+              onClick={handleGenerateRandomCustomers}
             >
-              {mode === 'synthetic' ? <Shuffle size={18} /> : <RotateCcw size={18} />} Generate New Instance
+              <Shuffle size={18} /> Generate Customers (Random 2D)
             </button>
 
-            {/* GA Parameters */}
+            {/* GA Hyperparameters */}
             {selectedAlgorithm === 'ga' && (
               <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--primary-cyan)', fontWeight: '600' }}>
@@ -296,83 +356,152 @@ export default function App() {
               </div>
             )}
 
-            {/* Infeasibility Warning Banner if Capacity / Demands invalid */}
-            {!configValidation.isValid && (
-              <div style={{ marginBottom: '1rem', padding: '0.85rem 1rem', background: 'rgba(244,63,94,0.12)', border: '1px solid #f43f5e', borderRadius: '0.6rem', color: '#fb7185', fontSize: '0.85rem', lineHeight: '1.4' }}>
+            {/* Infeasibility Warning Banner */}
+            {!configVal.isValid && (
+              <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(244,63,94,0.12)', border: '1px solid #f43f5e', borderRadius: '0.6rem', color: '#fb7185', fontSize: '0.85rem', lineHeight: '1.4' }}>
                 <div style={{ fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <AlertTriangle size={16} /> Instance Infeasible
+                  <AlertTriangle size={16} /> Configuration Infeasible
                 </div>
-                {configValidation.errors[0]}
+                {configVal.errors[0]}
               </div>
             )}
 
-            {/* Primary Action Button */}
+            {/* Action Button */}
             <button
               className="btn btn-primary"
-              style={{ width: '100%', opacity: !configValidation.isValid || isRunning ? 0.5 : 1.0, cursor: !configValidation.isValid || isRunning ? 'not-allowed' : 'pointer' }}
+              style={{ width: '100%', opacity: !configVal.isValid || isRunning ? 0.5 : 1.0, cursor: !configVal.isValid || isRunning ? 'not-allowed' : 'pointer' }}
               onClick={handleRunAlgorithm}
-              disabled={!configValidation.isValid || isRunning}
+              disabled={!configVal.isValid || isRunning}
             >
               <Play size={18} /> {isRunning ? 'Running Optimization...' : 'Run Algorithm'}
             </button>
           </div>
 
-          {/* Right Panel: Instance Info + Results + Visualization */}
+          {/* Right Panel: Instance Specifications & Customer Table */}
           <div className="display-panel">
-            {/* Instance Specifications Card (Correct Terminology: Section 1 & 6) */}
-            {instance && (
+            {/* Instance Specification Summary Card */}
+            {configVal && (
               <div className="card" style={{ background: '#0f172a' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#f8fafc', fontWeight: '700', fontFamily: 'var(--font-heading)' }}>
-                  <Database size={18} className="card-icon" /> VRP Instance Specifications
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Database size={18} className="card-icon" /> VRP Instance Specifications
+                  </h4>
+                  {configVal.isValid ? (
+                    <span className="badge badge-complete"><CheckCircle2 size={12} /> Configuration Valid</span>
+                  ) : (
+                    <span className="badge badge-invalid"><AlertTriangle size={12} /> Instance Infeasible</span>
+                  )}
                 </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', fontSize: '0.875rem' }}>
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Customers</span>
-                    <strong>{instance.numCustomers}</strong>
+                    <strong>{numCustomers}</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles</span>
-                    <strong>{instance.numVehicles}</strong>
+                    <strong>{numVehicles}</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicle Capacity</span>
-                    <strong>{instance.vehicleCapacity} units</strong>
+                    <strong>{capacity} units</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Depot Location</span>
-                    <strong>Node 0 (0.0, 0.0)</strong>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Demand</span>
+                    <strong style={{ color: 'var(--primary-cyan)' }}>{configVal.totalDemand} units</strong>
                   </div>
-                </div>
-                <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
-                  <strong>Customer Demands:</strong> {instance.nodes.map(n => n.id === 0 ? null : `C${n.id}: ${n.demand} units`).filter(Boolean).join(' | ')}
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Max Customer Demand</span>
+                    <strong style={{ color: configVal.vehicleCapacity < configVal.maxDemand ? '#fb7185' : '#34d399' }}>
+                      {configVal.maxDemand} units
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Fleet Capacity</span>
+                    <strong style={{ color: configVal.maxFleetCapacity < configVal.totalDemand ? '#fb7185' : '#34d399' }}>
+                      {configVal.maxFleetCapacity} units
+                    </strong>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Results Panel & 2D Visualization (Section 4, 5, 7) */}
+            {/* Interactive User-Editable Customer Table */}
+            <div className="card">
+              <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', marginBottom: '0.85rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Grid size={18} color="var(--primary-cyan)" /> Customer Node & Demand Table (User Editable)
+              </h4>
+
+              <div style={{ overflowX: 'auto', maxHeight: '220px', overflowY: 'auto' }}>
+                <table className="matrix-table">
+                  <thead>
+                    <tr>
+                      <th>Customer ID</th>
+                      <th>X Coordinate</th>
+                      <th>Y Coordinate</th>
+                      <th>Demand (units)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerNodes.map((cust, idx) => (
+                      <tr key={cust.id}>
+                        <th style={{ color: 'var(--primary-cyan)' }}>Cust {cust.id}</th>
+                        <td>
+                          <input
+                            type="number"
+                            step="0.1"
+                            className="form-input"
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center' }}
+                            value={cust.x}
+                            onChange={(e) => handleCustomerChange(idx, 'x', e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            step="0.1"
+                            className="form-input"
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center' }}
+                            value={cust.y}
+                            onChange={(e) => handleCustomerChange(idx, 'y', e.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            className="form-input"
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center', fontWeight: '700', color: '#34d399' }}
+                            value={cust.demand}
+                            onChange={(e) => handleCustomerChange(idx, 'demand', e.target.value)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Animated Route Visualizer & VRPSolution Card */}
             <div className="visualizer-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: '#f8fafc' }}>
-                  Algorithm Execution & Route Visualizer
+                  EV Routing Simulator & Visualizer
                 </h4>
                 {solution ? (
                   solution.feasible ? (
-                    <span className="badge badge-valid">
-                      <ShieldCheck size={14} /> FEASIBLE SOLUTION
-                    </span>
+                    <span className="badge badge-valid"><ShieldCheck size={14} /> FEASIBLE SOLUTION</span>
                   ) : (
-                    <span className="badge badge-invalid">
-                      <AlertTriangle size={14} /> INFEASIBLE ROUTE
-                    </span>
+                    <span className="badge badge-invalid"><AlertTriangle size={14} /> INFEASIBLE ROUTE</span>
                   )
                 ) : (
-                  <span className="badge badge-pending">
-                    <Clock size={14} /> NO SOLUTION GENERATED YET
-                  </span>
+                  <span className="badge badge-pending"><Clock size={14} /> NO SOLUTION GENERATED YET</span>
                 )}
               </div>
 
-              {/* Dynamic SVG Visualizer */}
+              {/* Dynamic SVG Visualizer with Animated EVs */}
               <RouteVisualizer
                 instance={instance}
                 routes={solution ? solution.routes : []}
@@ -493,7 +622,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 8. METHODOLOGY SECTION */}
+      {/* 3. METHODOLOGY PIPELINE */}
       <section className="section">
         <h3 className="section-title">
           <BrainCircuit className="section-title-icon" size={24} /> Overall Research Pipeline
@@ -536,7 +665,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 9. DEVELOPMENT STATUS SECTION */}
+      {/* 4. DEVELOPMENT STATUS SECTION */}
       <section className="section">
         <h3 className="section-title">
           <Activity className="section-title-icon" size={24} /> Module Implementation Status

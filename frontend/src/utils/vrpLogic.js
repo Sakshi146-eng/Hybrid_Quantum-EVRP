@@ -1,9 +1,10 @@
 /**
- * Frontend JavaScript implementation of Classical VRP toy instances & distance calculations.
- * Exactly mirrors backend src/data/loader.py and src/vrp/instance.py logic.
+ * Frontend JavaScript implementation of Classical VRP instances & distance calculations.
+ * Supports user-configured instances, dynamic customer tables, synthetic random generation,
+ * and comprehensive feasibility validation.
  */
 
-export function getDeterministicToyInstance(numCustomers = 3, vehicleCapacity = 10.0) {
+export function getDeterministicToyInstance(numCustomers = 5, vehicleCapacity = 10.0, numVehicles = 2) {
   let coords = [];
 
   if (numCustomers === 3) {
@@ -22,7 +23,7 @@ export function getDeterministicToyInstance(numCustomers = 3, vehicleCapacity = 
       { id: 4, type: 'Cust 4', x: 0.0, y: 4.0, demand: 2.0 },
     ];
   } else {
-    // 5 customers
+    // 5 to 20 customers default grid construction
     coords = [
       { id: 0, type: 'Depot', x: 0.0, y: 0.0, demand: 0.0 },
       { id: 1, type: 'Cust 1', x: 0.0, y: 3.0, demand: 2.0 },
@@ -31,19 +32,33 @@ export function getDeterministicToyInstance(numCustomers = 3, vehicleCapacity = 
       { id: 4, type: 'Cust 4', x: 0.0, y: 4.0, demand: 2.0 },
       { id: 5, type: 'Cust 5', x: 3.0, y: 0.0, demand: 1.0 },
     ];
+
+    // For N > 5, generate remaining nodes in grid layout
+    for (let i = 6; i <= numCustomers; i++) {
+      const gx = parseFloat(((i % 5) * 1.5 + 1.0).toFixed(1));
+      const gy = parseFloat((Math.floor(i / 5) * 1.5 + 1.0).toFixed(1));
+      const gd = parseFloat(((i % 4) + 1.0).toFixed(1));
+      coords.push({
+        id: i,
+        type: `Cust ${i}`,
+        x: gx,
+        y: gy,
+        demand: gd,
+      });
+    }
   }
 
-  return buildInstanceFromNodes(coords, numCustomers, vehicleCapacity);
+  return buildInstanceFromNodes(coords, numCustomers, vehicleCapacity, numVehicles);
 }
 
-export function generateSyntheticInstance(numCustomers = 3, vehicleCapacity = 10.0) {
+export function generateRandomCustomers(numCustomers = 5, vehicleCapacity = 10.0, numVehicles = 2, depotX = 0.0, depotY = 0.0) {
   const coords = [
-    { id: 0, type: 'Depot', x: 0.0, y: 0.0, demand: 0.0 }
+    { id: 0, type: 'Depot', x: parseFloat(depotX) || 0.0, y: parseFloat(depotY) || 0.0, demand: 0.0 }
   ];
 
   for (let i = 1; i <= numCustomers; i++) {
-    const rx = parseFloat((Math.random() * 5.0).toFixed(1));
-    const ry = parseFloat((Math.random() * 5.0).toFixed(1));
+    const rx = parseFloat((Math.random() * 6.0 + 0.5).toFixed(1));
+    const ry = parseFloat((Math.random() * 6.0 + 0.5).toFixed(1));
     const rdemand = parseFloat((Math.floor(Math.random() * 4) + 1).toFixed(1));
 
     coords.push({
@@ -55,12 +70,12 @@ export function generateSyntheticInstance(numCustomers = 3, vehicleCapacity = 10
     });
   }
 
-  return buildInstanceFromNodes(coords, numCustomers, vehicleCapacity);
+  return buildInstanceFromNodes(coords, numCustomers, vehicleCapacity, numVehicles);
 }
 
-function buildInstanceFromNodes(nodes, numCustomers, vehicleCapacity) {
+export function buildInstanceFromNodes(nodes, numCustomers, vehicleCapacity, numVehicles = 2) {
   const numNodes = nodes.length;
-  const demands = nodes.map((n) => n.demand);
+  const demands = nodes.map((n) => parseFloat(n.demand) || 0.0);
   const distanceMatrix = Array.from({ length: numNodes }, () => Array(numNodes).fill(0));
 
   for (let i = 0; i < numNodes; i++) {
@@ -71,12 +86,10 @@ function buildInstanceFromNodes(nodes, numCustomers, vehicleCapacity) {
     }
   }
 
-  const numVehicles = numCustomers > 3 ? 2 : 1;
-
   return {
     numNodes,
-    numCustomers,
-    numVehicles,
+    numCustomers: nodes.length - 1,
+    numVehicles: parseInt(numVehicles, 10) || 1,
     depotIdx: 0,
     vehicleCapacity: parseFloat(vehicleCapacity) || 10.0,
     nodes,
@@ -86,23 +99,42 @@ function buildInstanceFromNodes(nodes, numCustomers, vehicleCapacity) {
 }
 
 /**
- * Validates instance feasibility prior to algorithm execution.
- * Enforces:
- * 1. vehicle_capacity >= max_customer_demand
- * 2. num_vehicles * vehicle_capacity >= total_customer_demand
+ * Comprehensive VRP Instance Feasibility & Syntax Validator
  */
 export function validateVRPInstanceConfig(instance) {
-  if (!instance || !instance.demands) {
-    return { isValid: false, errors: ['Invalid instance data'] };
+  if (!instance || !instance.nodes || !instance.demands) {
+    return { isValid: false, errors: ['Invalid instance data structure.'] };
   }
 
-  const { numCustomers, vehicleCapacity, numVehicles, demands } = instance;
+  const { numCustomers, vehicleCapacity, numVehicles, demands, nodes } = instance;
+  const errors = [];
+
+  if (numCustomers < 1) {
+    errors.push('Number of customers must be at least 1.');
+  }
+
+  if (numVehicles < 1) {
+    errors.push('Number of vehicles must be at least 1.');
+  }
+
+  if (vehicleCapacity <= 0 || isNaN(vehicleCapacity)) {
+    errors.push('Vehicle capacity must be greater than 0.');
+  }
+
+  // Check valid numeric values for coordinates and demands
+  for (const n of nodes) {
+    if (isNaN(n.x) || isNaN(n.y) || !isFinite(n.x) || !isFinite(n.y)) {
+      errors.push(`Invalid coordinate values for Node ${n.id}.`);
+    }
+    if (isNaN(n.demand) || n.demand < 0 || !isFinite(n.demand)) {
+      errors.push(`Invalid demand value for Node ${n.id}.`);
+    }
+  }
+
   const customerDemands = demands.slice(1);
   const maxDemand = customerDemands.length > 0 ? Math.max(...customerDemands) : 0;
   const totalDemand = customerDemands.reduce((a, b) => a + b, 0);
   const maxFleetCapacity = numVehicles * vehicleCapacity;
-
-  const errors = [];
 
   if (vehicleCapacity < maxDemand) {
     errors.push(
@@ -110,7 +142,7 @@ export function validateVRPInstanceConfig(instance) {
     );
   } else if (maxFleetCapacity < totalDemand) {
     errors.push(
-      `Instance infeasible: total demand (${totalDemand}) exceeds total vehicle capacity (${maxFleetCapacity}).`
+      `Instance infeasible: total demand (${totalDemand}) exceeds total fleet capacity (${maxFleetCapacity}).`
     );
   }
 
