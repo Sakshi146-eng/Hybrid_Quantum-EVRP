@@ -14,29 +14,41 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertTriangle,
-  Info,
   Shuffle,
-  Edit3,
+  Activity,
+  Sliders,
+  Database,
+  Grid,
 } from 'lucide-react';
 
 import {
   getDeterministicToyInstance,
   generateSyntheticInstance,
-  evaluateRoute,
 } from './utils/vrpLogic';
+import { runClassicalSolver } from './utils/solverApi';
 import RouteVisualizer from './components/RouteVisualizer';
 
 export default function App() {
+  // Instance Controls State
   const [numCustomers, setNumCustomers] = useState(3);
   const [capacity, setCapacity] = useState(10.0);
-  const [mode, setMode] = useState('deterministic'); // 'deterministic' or 'synthetic'
+  const [mode, setMode] = useState('deterministic');
 
+  // Selected Algorithm State
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState('ga');
+
+  // GA Hyperparameter State
+  const [gaPopSize, setGaPopSize] = useState(50);
+  const [gaGenerations, setGaGenerations] = useState(100);
+  const [gaCrossoverRate, setGaCrossoverRate] = useState(0.8);
+  const [gaMutationRate, setGaMutationRate] = useState(0.2);
+
+  // Core VRP Data & Solution State
   const [instance, setInstance] = useState(null);
-  const [routeString, setRouteString] = useState('[0, 1, 2, 3, 0]');
-  const [evaluation, setEvaluation] = useState(null);
+  const [solution, setSolution] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Helper to show temporary notification toasts
   const showToast = (msg, type = 'info') => {
     setToastMessage({ text: msg, type });
     setTimeout(() => {
@@ -44,108 +56,66 @@ export default function App() {
     }, 4000);
   };
 
-  // Generate VRP Instance (Triggered on 'Generate VRP' or parameters change)
-  const handleGenerateVRP = () => {
+  // Generate VRP Instance Data
+  const handleGenerateInstance = () => {
     let inst;
     if (mode === 'synthetic') {
       inst = generateSyntheticInstance(numCustomers, capacity);
       showToast(`Generated random synthetic VRP instance with ${numCustomers} customers.`, 'success');
     } else {
       inst = getDeterministicToyInstance(numCustomers, capacity);
-      showToast(`Loaded deterministic ${numCustomers}-customer VRP instance.`, 'info');
+      showToast(`Loaded deterministic ${numCustomers}-customer VRP toy instance.`, 'info');
     }
-
-    // Set default route string matching the instance nodes
-    const defaultRoute = inst.candidateRoute;
-    const defaultRouteStr = `[${defaultRoute.join(', ')}]`;
-
     setInstance(inst);
-    setRouteString(defaultRouteStr);
-
-    // Evaluate default route
-    const evalRes = evaluateRoute(inst, defaultRoute);
-    setEvaluation(evalRes);
+    setSolution(null); // Clear previous solution on instance change
   };
 
-  // Auto-generate on initial render or mode/customer count change
   useEffect(() => {
-    handleGenerateVRP();
+    handleGenerateInstance();
   }, [numCustomers, mode]);
 
-  // Handle Route Evaluation when 'Run Demo / Validate Route' is clicked or capacity changes
-  const handleValidateRoute = () => {
+  // Run Selected Classical Solver
+  const handleRunAlgorithm = async () => {
     if (!instance) return;
 
-    // Parse route string e.g. "[0, 1, 3, 2, 0]" or "0, 1, 3, 2, 0"
-    let parsedRoute = [];
-    try {
-      const cleanStr = routeString.replace(/\[|\]/g, '').trim();
-      if (cleanStr.length > 0) {
-        parsedRoute = cleanStr.split(',').map((s) => parseInt(s.trim(), 10));
-      }
-    } catch (err) {
-      showToast('Invalid route format. Use format like [0, 1, 2, 0]', 'error');
-      return;
-    }
-
-    // Update instance capacity if user modified the capacity input
+    // Ensure instance vehicleCapacity matches current input
     const currentInst = {
       ...instance,
       vehicleCapacity: parseFloat(capacity) || 10.0,
     };
     setInstance(currentInst);
 
-    const evalRes = evaluateRoute(currentInst, parsedRoute);
-    setEvaluation(evalRes);
+    setIsRunning(true);
+    try {
+      const sol = await runClassicalSolver(selectedAlgorithm, currentInst, {
+        populationSize: parseInt(gaPopSize, 10) || 50,
+        generations: parseInt(gaGenerations, 10) || 100,
+        crossoverRate: parseFloat(gaCrossoverRate) || 0.8,
+        mutationRate: parseFloat(gaMutationRate) || 0.2,
+      });
 
-    if (evalRes.isValid) {
-      showToast(`Route validated! Total distance: ${evalRes.totalDistance} units. Feasible ✓`, 'success');
-    } else {
-      showToast(`Route validation failed: ${evalRes.errors[0]}`, 'warning');
+      setSolution(sol);
+      if (sol.feasible) {
+        showToast(`${sol.algorithm_name} solved instance! Distance: ${sol.total_distance} units. Feasible ✓`, 'success');
+      } else {
+        showToast(`${sol.algorithm_name} produced infeasible route.`, 'warning');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsRunning(false);
     }
-  };
-
-  // Helper to set preset routes
-  const handleSelectPresetRoute = (presetType) => {
-    if (!instance) return;
-    const n = instance.numNodes;
-
-    let routeArr = [];
-    if (presetType === 'sequential') {
-      // 0 -> 1 -> 2 -> ... -> 0
-      routeArr = Array.from({ length: n }, (_, i) => i);
-      routeArr.push(0);
-    } else if (presetType === 'reverse') {
-      // 0 -> n-1 -> n-2 -> ... -> 1 -> 0
-      routeArr = [0];
-      for (let i = n - 1; i >= 1; i--) routeArr.push(i);
-      routeArr.push(0);
-    } else if (presetType === 'subtour') {
-      // 0 -> 1 -> 2 -> 0 (Leaves out some nodes)
-      routeArr = [0, 1, Math.min(2, n - 1), 0];
-    } else if (presetType === 'invalid_start') {
-      // 1 -> 2 -> 3 -> 0 (No depot start)
-      routeArr = [1, Math.min(2, n - 1), 0];
-    }
-
-    const str = `[${routeArr.join(', ')}]`;
-    setRouteString(str);
-
-    // Auto evaluate preset
-    const currentInst = { ...instance, vehicleCapacity: parseFloat(capacity) || 10.0 };
-    const evalRes = evaluateRoute(currentInst, routeArr);
-    setEvaluation(evalRes);
   };
 
   return (
     <div className="app-container">
-      {/* Background Orbs */}
+      {/* Background Glowing Orbs */}
       <div className="bg-glow">
         <div className="orb orb-1"></div>
         <div className="orb orb-2"></div>
       </div>
 
-      {/* Floating Toast Notification */}
+      {/* Floating Notification Toast */}
       {toastMessage && (
         <div
           style={{
@@ -176,105 +146,53 @@ export default function App() {
         </div>
       )}
 
-      {/* 1. HEADER */}
+      {/* 1. PROJECT HEADER */}
       <header className="header">
         <div className="header-badge">
-          <Sparkles size={16} /> Phase 1: Classical VRP Baseline Operational
+          <Sparkles size={16} /> Classical VRP Baseline & Genetic Algorithm Operational
         </div>
         <h1 className="header-title">Quantum-Assisted Electric Vehicle Routing</h1>
-        <h2 className="header-subtitle">Hybrid Quantum-Classical Optimization</h2>
+        <h2 className="header-subtitle">Using Hybrid Optimization</h2>
+        <p style={{ maxWidth: '780px', margin: '1rem auto 0', color: 'var(--text-muted)', fontSize: '0.975rem' }}>
+          The project studies a hybrid quantum-classical optimization framework for Vehicle Routing and extends it toward the Electric Vehicle Routing Problem.
+        </p>
       </header>
 
-      {/* 2. PROJECT OVERVIEW SECTION */}
+      {/* 2. CLASSICAL VRP SOLVER SECTION */}
       <section className="section">
         <h3 className="section-title">
-          <Layers className="section-title-icon" size={24} /> Project Overview
-        </h3>
-        <div className="grid-cards">
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">VRP</span>
-              <div className="card-icon"><Truck size={20} /></div>
-            </div>
-            <div className="card-body">
-              <strong>Vehicle Routing Problem:</strong> Classical combinatorial baseline finding optimal paths for fleet delivery to customers with minimal distance.
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">EVRP</span>
-              <div className="card-icon"><BatteryCharging size={20} /></div>
-            </div>
-            <div className="card-body">
-              <strong>Electric VRP:</strong> Extends classical VRP with electric vehicle battery constraints, energy consumption rates, and charging station stops.
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">QUBO</span>
-              <div className="card-icon"><Binary size={20} /></div>
-            </div>
-            <div className="card-body">
-              <strong>QUBO Formulation:</strong> Quadratic Unconstrained Binary Optimization mapping route constraints into quadratic penalty matrices.
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">QAOA</span>
-              <div className="card-icon"><Cpu size={20} /></div>
-            </div>
-            <div className="card-body">
-              <strong>QAOA Solver:</strong> Quantum Approximate Optimization Algorithm parameterized by \(\gamma, \beta\) variational layers executed on QPUs.
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Reinforcement Learning</span>
-              <div className="card-icon"><BrainCircuit size={20} /></div>
-            </div>
-            <div className="card-body">
-              <strong>RL Controller:</strong> Dynamic policy agent optimizing QAOA parameters during runtime to accelerate quantum convergence.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. VRP DEMO SECTION */}
-      <section className="section">
-        <h3 className="section-title">
-          <Truck className="section-title-icon" size={24} /> Classical VRP Foundation Demo
+          <Cpu className="section-title-icon" size={24} /> Classical VRP Solver Baseline
         </h3>
 
         <div className="demo-container">
           {/* Controls Panel */}
           <div className="control-panel">
             <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', marginBottom: '1.25rem', color: '#f8fafc' }}>
-              Instance Configuration
+              Solver & Instance Controls
             </h4>
 
-            {/* Mode Selection */}
+            {/* Algorithm Dropdown */}
             <div className="form-group">
-              <label className="form-label">Instance Data Source</label>
+              <label className="form-label">Select Classical Algorithm</label>
               <select
                 className="form-select"
-                value={mode}
-                onChange={(e) => setMode(e.target.value)}
+                value={selectedAlgorithm}
+                onChange={(e) => setSelectedAlgorithm(e.target.value)}
               >
-                <option value="deterministic">Deterministic (Fixed Integer Coords)</option>
-                <option value="synthetic">Random Synthetic Generator</option>
+                <option value="ga">Genetic Algorithm (GA) — Active ✅</option>
+                <option value="aco" disabled>Ant Colony Optimization (ACO) — Coming Soon 🔲</option>
+                <option value="sa" disabled>Simulated Annealing (SA) — Coming Soon 🔲</option>
+                <option value="tabu_search" disabled>Tabu Search (TS) — Coming Soon 🔲</option>
               </select>
             </div>
 
+            {/* VRP Instance Selector */}
             <div className="form-group">
-              <label className="form-label">Number of Customers</label>
+              <label className="form-label">VRP Instance Size</label>
               <select
                 className="form-select"
                 value={numCustomers}
-                onChange={(e) => setNumCustomers(parseInt(e.target.value))}
+                onChange={(e) => setNumCustomers(parseInt(e.target.value, 10))}
               >
                 <option value={3}>3 Customers (4 Nodes Total)</option>
                 <option value={4}>4 Customers (5 Nodes Total)</option>
@@ -282,6 +200,20 @@ export default function App() {
               </select>
             </div>
 
+            {/* Instance Data Mode */}
+            <div className="form-group">
+              <label className="form-label">Instance Data Source</label>
+              <select
+                className="form-select"
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+              >
+                <option value="deterministic">Deterministic Toy Instance</option>
+                <option value="synthetic">Random Synthetic Generator</option>
+              </select>
+            </div>
+
+            {/* Vehicle Capacity Input */}
             <div className="form-group">
               <label className="form-label">Vehicle Capacity (Payload Limit)</label>
               <input
@@ -295,127 +227,227 @@ export default function App() {
             </div>
 
             <button
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '0.5rem' }}
-              onClick={handleGenerateVRP}
+              className="btn btn-secondary"
+              style={{ width: '100%', marginBottom: '1rem' }}
+              onClick={handleGenerateInstance}
             >
-              {mode === 'synthetic' ? <Shuffle size={18} /> : <RotateCcw size={18} />} Generate VRP Instance
+              {mode === 'synthetic' ? <Shuffle size={18} /> : <RotateCcw size={18} />} Generate New Instance
             </button>
 
-            <hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '1.5rem 0' }} />
+            {/* GA Parameters Accordion/Controls */}
+            {selectedAlgorithm === 'ga' && (
+              <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--primary-cyan)', fontWeight: '600' }}>
+                  <Sliders size={16} /> GA Hyperparameters
+                </div>
 
-            {/* Route Candidate Controls */}
-            <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', marginBottom: '1rem', color: '#f8fafc' }}>
-              Candidate Route Selection
-            </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Pop Size</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={gaPopSize}
+                      onChange={(e) => setGaPopSize(e.target.value)}
+                    />
+                  </div>
 
-            <div className="form-group">
-              <label className="form-label">Route Node Sequence</label>
-              <input
-                type="text"
-                className="form-input"
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--primary-cyan)' }}
-                value={routeString}
-                onChange={(e) => setRouteString(e.target.value)}
-                placeholder="[0, 1, 2, 3, 0]"
-              />
-            </div>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Generations</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={gaGenerations}
+                      onChange={(e) => setGaGenerations(e.target.value)}
+                    />
+                  </div>
 
-            {/* Route Presets */}
-            <div className="form-group">
-              <label className="form-label">Load Preset Candidate Routes</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => handleSelectPresetRoute('sequential')}>
-                  Sequential
-                </button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => handleSelectPresetRoute('reverse')}>
-                  Reverse
-                </button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={() => handleSelectPresetRoute('subtour')}>
-                  Sub-route
-                </button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem', fontSize: '0.8rem', color: '#fb7185' }} onClick={() => handleSelectPresetRoute('invalid_start')}>
-                  Invalid Start
-                </button>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Crossover Rate</label>
+                    <input
+                      type="number"
+                      step="0.05"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={gaCrossoverRate}
+                      onChange={(e) => setGaCrossoverRate(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Mutation Rate</label>
+                    <input
+                      type="number"
+                      step="0.05"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={gaMutationRate}
+                      onChange={(e) => setGaMutationRate(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Primary Action Button */}
             <button
-              className="btn btn-secondary"
-              style={{ width: '100%', marginTop: '0.75rem', background: 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4', color: '#38bdf8' }}
-              onClick={handleValidateRoute}
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+              onClick={handleRunAlgorithm}
+              disabled={isRunning}
             >
-              <Play size={18} /> Run Demo / Validate Route
+              <Play size={18} /> {isRunning ? 'Running Optimization...' : 'Run Algorithm'}
             </button>
           </div>
 
-          {/* Display & Results Panel */}
-          {instance && evaluation && (
-            <div className="display-panel">
-              {/* Visualizer & Route Results */}
-              <div className="visualizer-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: '#f8fafc' }}>
-                    Interactive 2D Route Visualizer
-                  </h4>
-                  {evaluation.isValid ? (
+          {/* Right Panel: Instance Info + Results + Visualization */}
+          <div className="display-panel">
+            {/* Instance Specifications Card (Section 6) */}
+            {instance && (
+              <div className="card" style={{ background: '#0f172a' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#f8fafc', fontWeight: '700', fontFamily: 'var(--font-heading)' }}>
+                  <Database size={18} className="card-icon" /> VRP Instance Specifications
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', fontSize: '0.875rem' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Customers</span>
+                    <strong>{instance.numCustomers} nodes</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles Limit</span>
+                    <strong>{instance.numNodes > 4 ? 2 : 1} available</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicle Capacity</span>
+                    <strong>{instance.vehicleCapacity} payload</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Depot Location</span>
+                    <strong>Node 0 (0.0, 0.0)</strong>
+                  </div>
+                </div>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.5rem' }}>
+                  <strong>Demands:</strong> {instance.nodes.map(n => n.id === 0 ? null : `C${n.id}: ${n.demand}t`).filter(Boolean).join(' | ')}
+                </div>
+              </div>
+            )}
+
+            {/* Results Panel & 2D Visualization (Section 3, 4, 5) */}
+            <div className="visualizer-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: '#f8fafc' }}>
+                  Algorithm Execution & Route Visualizer
+                </h4>
+                {solution ? (
+                  solution.feasible ? (
                     <span className="badge badge-valid">
-                      <ShieldCheck size={14} /> VALID ROUTE
+                      <ShieldCheck size={14} /> FEASIBLE SOLUTION
                     </span>
                   ) : (
                     <span className="badge badge-invalid">
-                      <AlertTriangle size={14} /> INVALID ROUTE
+                      <AlertTriangle size={14} /> INFEASIBLE ROUTE
                     </span>
-                  )}
-                </div>
-
-                {/* SVG Visualizer */}
-                <RouteVisualizer
-                  instance={instance}
-                  route={(() => {
-                    try {
-                      return routeString.replace(/\[|\]/g, '').split(',').map((s) => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-                    } catch {
-                      return instance.candidateRoute;
-                    }
-                  })()}
-                />
-
-                <div style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                  <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Evaluated Route</div>
-                    <div className="route-code" style={{ marginTop: '0.25rem', fontSize: '0.85rem' }}>
-                      {routeString}
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total Route Distance</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--primary-cyan)', fontFamily: 'var(--font-heading)' }}>
-                      {evaluation.totalDistance} units
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Demand / Capacity</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: '700', color: evaluation.capacityValid ? '#34d399' : '#fb7185', fontFamily: 'var(--font-heading)' }}>
-                      {evaluation.totalDemand} / {instance.vehicleCapacity}
-                    </div>
-                  </div>
-                </div>
-
-                {evaluation.errors.length > 0 && (
-                  <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: '0.5rem', color: '#fb7185', fontSize: '0.85rem' }}>
-                    <strong>Validation Errors:</strong> {evaluation.errors.join('; ')}
-                  </div>
+                  )
+                ) : (
+                  <span className="badge badge-pending">
+                    <Clock size={14} /> NO SOLUTION GENERATED YET
+                  </span>
                 )}
               </div>
 
-              {/* Distance Matrix Table */}
+              {/* SVG Visualizer */}
+              <RouteVisualizer
+                instance={instance}
+                routes={solution ? solution.routes : []}
+              />
+
+              {/* Standardized VRPSolution Results Display */}
+              {solution ? (
+                <div style={{ marginTop: '1.25rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Algorithm</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#f8fafc' }}>
+                        {solution.algorithm_name}
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Distance</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--primary-cyan)', fontFamily: 'var(--font-heading)' }}>
+                        {solution.total_distance} units
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Execution Runtime</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#a5b4fc', fontFamily: 'var(--font-mono)' }}>
+                        {solution.runtime_seconds.toFixed(4)} s
+                      </div>
+                    </div>
+
+                    <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Vehicles Used</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f8fafc' }}>
+                        {solution.routes.length} vehicle(s)
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Vehicle Routes & Payload Breakdown */}
+                  <h5 style={{ fontFamily: 'var(--font-heading)', fontSize: '0.95rem', marginBottom: '0.75rem', color: '#e2e8f0' }}>
+                    Vehicle Route & Payload Breakdown
+                  </h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {solution.routes.map((r, rIdx) => (
+                      <div
+                        key={rIdx}
+                        style={{
+                          background: '#0f172a',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          display: 'flex',
+                          justify: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '0.5rem',
+                        }}
+                      >
+                        <div>
+                          <strong style={{ color: 'var(--primary-cyan)', fontSize: '0.85rem', marginRight: '0.5rem' }}>
+                            Vehicle {rIdx + 1}:
+                          </strong>
+                          <span className="route-code" style={{ fontSize: '0.85rem' }}>
+                            {r.join(' → ')}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          Payload Load: <strong>{solution.vehicle_loads[rIdx] || 0} / {instance.vehicleCapacity}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                  No solution generated yet. Select an algorithm and click <strong>'Run Algorithm'</strong>.
+                </div>
+              )}
+            </div>
+
+            {/* Pairwise Distance Matrix Table (Section 7) */}
+            {instance && (
               <div className="card">
-                <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', marginBottom: '0.85rem', color: '#f8fafc' }}>
-                  Pairwise Euclidean Distance Matrix (N x N)
-                </h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Grid size={18} color="var(--primary-cyan)" /> Pairwise Euclidean Distance Matrix (N x N)
+                  </h4>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Values in coordinate distance units</span>
+                </div>
+
                 <div style={{ overflowX: 'auto' }}>
                   <table className="matrix-table">
                     <thead>
@@ -441,63 +473,63 @@ export default function App() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 
-      {/* 4. METHODOLOGY PIPELINE */}
+      {/* 8. METHODOLOGY SECTION */}
       <section className="section">
         <h3 className="section-title">
-          <BrainCircuit className="section-title-icon" size={24} /> Methodology Pipeline
+          <BrainCircuit className="section-title-icon" size={24} /> Overall Research Pipeline
         </h3>
         <div className="pipeline-container">
           <div className="pipeline-step active">
-            <div className="pipeline-step-title">Classical VRP</div>
-            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active</span>
+            <div className="pipeline-step-title">Classical VRP & GA</div>
+            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active Baseline</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
           <div className="pipeline-step pending">
-            <div className="pipeline-step-title">QUBO</div>
-            <span className="badge badge-pending"><Clock size={12} /> Coming Soon</span>
+            <div className="pipeline-step-title">QUBO Formulation</div>
+            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
           <div className="pipeline-step pending">
-            <div className="pipeline-step-title">QAOA</div>
-            <span className="badge badge-pending"><Clock size={12} /> Coming Soon</span>
+            <div className="pipeline-step-title">QAOA Optimization</div>
+            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
           <div className="pipeline-step pending">
-            <div className="pipeline-step-title">RL Tuning</div>
-            <span className="badge badge-pending"><Clock size={12} /> Coming Soon</span>
+            <div className="pipeline-step-title">RL Controller</div>
+            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
           <div className="pipeline-step pending">
             <div className="pipeline-step-title">EVRP Extension</div>
-            <span className="badge badge-pending"><Clock size={12} /> Coming Soon</span>
+            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
           <div className="pipeline-step pending">
             <div className="pipeline-step-title">Evaluation</div>
-            <span className="badge badge-pending"><Clock size={12} /> Coming Soon</span>
+            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
           </div>
         </div>
       </section>
 
-      {/* 5. STATUS SECTION */}
+      {/* 9. DEVELOPMENT STATUS SECTION */}
       <section className="section">
         <h3 className="section-title">
-          <CheckCircle2 className="section-title-icon" size={24} /> Project Module Implementation Status
+          <Activity className="section-title-icon" size={24} /> Module Implementation Status
         </h3>
         <table className="status-table">
           <thead>
             <tr>
-              <th>Module / Phase</th>
+              <th>Module / Algorithm</th>
               <th>Description</th>
               <th>Status</th>
             </tr>
@@ -505,33 +537,53 @@ export default function App() {
           <tbody>
             <tr>
               <td><strong>Classical VRP Foundation</strong></td>
-              <td>Data representation, toy instances, Euclidean distance matrix, route distance calculation, and basic validation</td>
+              <td>VRPInstance, Euclidean distance matrix, route distance calculation, and validator</td>
               <td><span className="badge badge-complete">✅ Complete</span></td>
             </tr>
             <tr>
+              <td><strong>Classical Solver Architecture</strong></td>
+              <td>BaseVRPSolver and VRPSolution standardized input/output interfaces</td>
+              <td><span className="badge badge-complete">✅ Complete</span></td>
+            </tr>
+            <tr>
+              <td><strong>Genetic Algorithm (GA)</strong></td>
+              <td>Permutation chromosome, OX crossover, swap mutation, elitism, greedy capacity decoding</td>
+              <td><span className="badge badge-complete">✅ Complete</span></td>
+            </tr>
+            <tr>
+              <td><strong>Ant Colony Optimization (ACO)</strong></td>
+              <td>Pheromone matrix update and probabilistic ant route construction</td>
+              <td><span className="badge badge-pending">⏳ Planned</span></td>
+            </tr>
+            <tr>
+              <td><strong>Simulated Annealing (SA)</strong></td>
+              <td>Metropolis acceptance probability and temperature cooling schedule</td>
+              <td><span className="badge badge-pending">⏳ Planned</span></td>
+            </tr>
+            <tr>
+              <td><strong>Tabu Search (TS)</strong></td>
+              <td>Tabu list memory tenure and neighborhood move search</td>
+              <td><span className="badge badge-pending">⏳ Planned</span></td>
+            </tr>
+            <tr>
               <td><strong>QUBO Formulation</strong></td>
-              <td>Penalty weight matrices mapping VRP constraints to quadratic terms</td>
-              <td><span className="badge badge-pending">🔲 Not implemented</span></td>
+              <td>Penalty matrices mapping VRP constraints to quadratic terms</td>
+              <td><span className="badge badge-pending">🔄 In Development</span></td>
             </tr>
             <tr>
               <td><strong>QAOA Quantum Solver</strong></td>
               <td>Parameterized quantum circuit execution on quantum simulators</td>
-              <td><span className="badge badge-pending">🔲 Not implemented</span></td>
+              <td><span className="badge badge-pending">🔄 In Development</span></td>
             </tr>
             <tr>
               <td><strong>Reinforcement Learning</strong></td>
               <td>Policy network optimizing QAOA parameters during quantum sampling</td>
-              <td><span className="badge badge-pending">🔲 Not implemented</span></td>
+              <td><span className="badge badge-pending">🔄 In Development</span></td>
             </tr>
             <tr>
               <td><strong>EVRP Extension</strong></td>
               <td>Battery capacity, energy dissipation, and charging station visits</td>
-              <td><span className="badge badge-pending">🔲 Not implemented</span></td>
-            </tr>
-            <tr>
-              <td><strong>Evaluation & Benchmarks</strong></td>
-              <td>Solution quality, quantum speedup, and convergence rate comparison</td>
-              <td><span className="badge badge-pending">🔲 Not implemented</span></td>
+              <td><span className="badge badge-pending">🔄 In Development</span></td>
             </tr>
           </tbody>
         </table>
