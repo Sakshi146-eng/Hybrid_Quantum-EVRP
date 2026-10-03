@@ -11,19 +11,20 @@ sys.path.insert(0, str(root_dir))
 import tests.test_setup as ts
 import tests.test_vrp as tv
 import tests.test_classical_base as tcb
+import tests.test_genetic_algorithm as tga
 
 if __name__ == "__main__":
-    print("Running VRP Foundation, Setup, and Classical Baseline Architecture unit tests...")
+    print("Running VRP Foundation, Classical Baseline, and Genetic Algorithm unit tests...")
 
     test_functions = [
-        # Setup tests
+        # Setup tests (6)
         ts.test_config_loader,
         ts.test_seed_reproducibility,
         ts.test_data_loader_toy_instance,
         ts.test_vrp_instance_cost,
         ts.test_evrp_feasibility_checker,
         ts.test_evaluation_metrics,
-        # Classical VRP Foundation tests
+        # Classical VRP Foundation tests (10)
         tv.test_1_number_of_nodes,
         tv.test_2_coordinate_storage,
         tv.test_3_distance_matrix_dimensions,
@@ -34,11 +35,20 @@ if __name__ == "__main__":
         tv.test_8_depot_start_end_handling,
         tv.test_9_invalid_route_node_handling,
         tv.test_10_vehicle_capacity_validation,
-        # Phase 1 Classical Baseline Architecture tests
+        # Phase 1 Classical Baseline Architecture tests (4)
         tcb.test_vrp_solution_structure_and_dict,
         tcb.test_abstract_base_solver_enforcement,
         tcb.test_random_baseline_solver_execution,
         tcb.test_solver_feasibility_check_infeasible_capacity,
+        # Phase 2 Genetic Algorithm tests (8)
+        tga.test_ga_solver_instantiation_and_name,
+        tga.test_ga_solver_returns_vrp_solution,
+        tga.test_ga_customer_coverage_and_no_duplicates,
+        tga.test_ga_routes_start_and_end_at_depot,
+        tga.test_ga_vehicle_capacity_enforcement,
+        tga.test_ga_total_distance_validity,
+        tga.test_ga_seed_reproducibility,
+        tga.test_ga_on_toy_instances,
     ]
 
     passed = 0
