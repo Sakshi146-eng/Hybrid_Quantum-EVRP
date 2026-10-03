@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, FastForward, Navigation } from 'lucide-react';
 
+// Visually distinct color styles per vehicle
 const ROUTE_STYLES = [
   { stroke: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)', bg: '#06b6d4', name: 'Vehicle 1' },
   { stroke: '#10b981', glow: 'rgba(16, 185, 129, 0.4)', bg: '#10b981', name: 'Vehicle 2' },
@@ -22,13 +23,13 @@ export default function RouteVisualizer({ instance, routes }) {
 
   const animRef = useRef(null);
 
-  // Dynamic SVG Scaling for 5-20 Nodes
-  const padding = 65;
-  const width = 600;
-  const height = 320;
+  // Spacious 1000 x 650 SVG Coordinate Viewport
+  const width = 1000;
+  const height = 650;
+  const padding = 80;
 
-  const maxX = Math.max(...nodes.map((n) => n.x), 6.0);
-  const maxY = Math.max(...nodes.map((n) => n.y), 6.0);
+  const maxX = Math.max(...nodes.map((n) => n.x), 6.5);
+  const maxY = Math.max(...nodes.map((n) => n.y), 6.5);
 
   const scaleX = (x) => padding + (x / maxX) * (width - 2 * padding);
   const scaleY = (y) => height - padding - (y / maxY) * (height - 2 * padding);
@@ -43,7 +44,7 @@ export default function RouteVisualizer({ instance, routes }) {
     }
   }
 
-  // Filter routes based on vehicle selection dropdown
+  // Active routes based on vehicle filter dropdown
   const activeRoutes = vehicleFilter === 'all'
     ? routeList
     : routeList.filter((_, idx) => idx === parseInt(vehicleFilter, 10));
@@ -58,7 +59,7 @@ export default function RouteVisualizer({ instance, routes }) {
 
       if (isPlaying) {
         setProgress((prev) => {
-          const next = prev + dt * 0.12 * speed;
+          const next = prev + dt * 0.1 * speed;
           if (next >= 1.0) {
             setIsPlaying(false);
             return 1.0;
@@ -112,7 +113,7 @@ export default function RouteVisualizer({ instance, routes }) {
     const isAtDepot = toNode.id === instance.depotIdx;
     const statusText = isAtDepot
       ? `Returning to Depot (0)`
-      : `Visiting C${toNode.id} (${toNode.demand} units)`;
+      : `Customer ${toNode.id}`;
 
     return {
       x: currX,
@@ -128,7 +129,7 @@ export default function RouteVisualizer({ instance, routes }) {
   // Generate SVG path string with curve displacement
   const createRoutePathD = (routeNodes, vIdx) => {
     if (!routeNodes || routeNodes.length < 2) return '';
-    const curveOffset = (vIdx - (routeList.length - 1) / 2) * 14;
+    const curveOffset = (vIdx - (routeList.length - 1) / 2) * 18;
 
     const coords = routeNodes
       .map((idx) => {
@@ -166,7 +167,7 @@ export default function RouteVisualizer({ instance, routes }) {
   };
 
   return (
-    <div className="visualizer-canvas-wrapper" style={{ position: 'relative', width: '100%' }}>
+    <div style={{ width: '100%' }}>
       {/* Simulation Controls Toolbar */}
       <div
         style={{
@@ -175,43 +176,43 @@ export default function RouteVisualizer({ instance, routes }) {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '0.75rem',
-          marginBottom: '0.75rem',
+          marginBottom: '1rem',
           background: '#0f172a',
-          padding: '0.75rem 1rem',
+          padding: '0.85rem 1.25rem',
           borderRadius: '0.75rem',
-          border: '1px solid rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.08)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           {isPlaying ? (
-            <button className="btn btn-secondary" style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }} onClick={() => setIsPlaying(false)}>
-              <Pause size={15} /> Pause
+            <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => setIsPlaying(false)}>
+              <Pause size={16} /> Pause
             </button>
           ) : (
-            <button className="btn btn-primary" style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }} onClick={() => setIsPlaying(true)}>
-              <Play size={15} /> Play EV Simulation
+            <button className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => setIsPlaying(true)}>
+              <Play size={16} /> Play EV Simulation
             </button>
           )}
 
-          <button className="btn btn-secondary" style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }} onClick={handleReplay}>
-            <RotateCcw size={15} /> Replay
+          <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={handleReplay}>
+            <RotateCcw size={16} /> Replay
           </button>
         </div>
 
         {/* Speed Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <FastForward size={15} /> Speed:
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+          <FastForward size={16} /> Speed:
           {[0.5, 1.0, 2.0].map((s) => (
             <button
               key={s}
               style={{
-                padding: '0.25rem 0.55rem',
+                padding: '0.3rem 0.65rem',
                 borderRadius: '0.4rem',
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.12)',
                 background: speed === s ? 'var(--primary-indigo)' : 'rgba(255,255,255,0.05)',
                 color: '#fff',
                 cursor: 'pointer',
-                fontSize: '0.75rem',
+                fontSize: '0.8rem',
                 fontWeight: '600',
               }}
               onClick={() => setSpeed(s)}
@@ -223,11 +224,11 @@ export default function RouteVisualizer({ instance, routes }) {
 
         {/* Vehicle Filter Selector */}
         {routeList.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            <Navigation size={15} /> Animate:
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            <Navigation size={16} /> Animate:
             <select
               className="form-select"
-              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', width: 'auto' }}
+              style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', width: 'auto' }}
               value={vehicleFilter}
               onChange={(e) => setVehicleFilter(e.target.value)}
             >
@@ -240,138 +241,213 @@ export default function RouteVisualizer({ instance, routes }) {
         )}
       </div>
 
-      {/* SVG Routing Map Canvas */}
-      <svg
-        width="100%"
-        height="320"
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ background: '#0b1120', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        <defs>
-          <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+      {/* Spacious 620px Route Canvas Wrapper */}
+      <div className="visualizer-canvas-wrapper">
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ background: '#0b1120', display: 'block' }}
+        >
+          <defs>
+            <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
 
-        {/* Grid Background Lines */}
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((val) => (
-          <g key={val}>
-            <line
-              x1={scaleX(val)}
-              y1={padding - 25}
-              x2={scaleX(val)}
-              y2={height - padding + 25}
-              stroke="rgba(255,255,255,0.04)"
-              strokeDasharray="3 3"
-            />
-            <line
-              x1={padding - 25}
-              y1={scaleY(val)}
-              x2={width - padding + 25}
-              y2={scaleY(val)}
-              stroke="rgba(255,255,255,0.04)"
-              strokeDasharray="3 3"
-            />
-          </g>
-        ))}
-
-        {/* Render Vehicle Routes */}
-        {activeRoutes.map((r, idx) => {
-          const origIdx = vehicleFilter === 'all' ? idx : parseInt(vehicleFilter, 10);
-          const pathD = createRoutePathD(r, origIdx);
-          if (!pathD) return null;
-          const style = ROUTE_STYLES[origIdx % ROUTE_STYLES.length];
-
-          return (
-            <path
-              key={idx}
-              d={pathD}
-              fill="none"
-              stroke={style.stroke}
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#glowEffect)"
-            />
-          );
-        })}
-
-        {/* Animated EV Markers */}
-        {routeList.map((r, rIdx) => {
-          if (vehicleFilter !== 'all' && parseInt(vehicleFilter, 10) !== rIdx) return null;
-          const pos = calculateVehiclePosition(r);
-          if (!pos) return null;
-          const style = ROUTE_STYLES[rIdx % ROUTE_STYLES.length];
-
-          return (
-            <g key={rIdx} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.angle})`}>
-              {/* Pulse Ring around active EV */}
-              <circle r="14" fill={style.glow} />
-
-              {/* Animated Vehicle Car Marker */}
-              <rect x="-10" y="-6" width="20" height="12" rx="3" fill={style.stroke} stroke="#fff" strokeWidth="1.5" />
-              <circle cx="-5" cy="-6" r="2" fill="#fff" />
-              <circle cx="5" cy="-6" r="2" fill="#fff" />
-              <circle cx="-5" cy="6" r="2" fill="#fff" />
-              <circle cx="5" cy="6" r="2" fill="#fff" />
-            </g>
-          );
-        })}
-
-        {/* Render Depot & Customer Nodes */}
-        {nodes.map((node) => {
-          const isDepot = node.id === instance.depotIdx;
-          const cx = scaleX(node.x);
-          const cy = scaleY(node.y);
-
-          return (
-            <g key={node.id} transform={`translate(${cx}, ${cy})`}>
-              {/* Outer Glow Ring */}
-              <circle
-                r={isDepot ? 15 : 11}
-                fill={isDepot ? 'rgba(245, 158, 11, 0.25)' : 'rgba(6, 182, 212, 0.2)'}
-                stroke={isDepot ? '#f59e0b' : '#06b6d4'}
-                strokeWidth="2"
+          {/* Grid Background Lines */}
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => (
+            <g key={val}>
+              <line
+                x1={scaleX(val)}
+                y1={padding - 30}
+                x2={scaleX(val)}
+                y2={height - padding + 30}
+                stroke="rgba(255,255,255,0.035)"
+                strokeDasharray="4 4"
               />
-
-              {/* Core Circle */}
-              <circle r={isDepot ? 6 : 4.5} fill={isDepot ? '#fbbf24' : '#38bdf8'} />
-
-              {/* Node Labels */}
-              <text
-                x="0"
-                y={isDepot ? -22 : 24}
-                textAnchor="middle"
-                fill={isDepot ? '#fbbf24' : '#e2e8f0'}
-                fontSize="11"
-                fontWeight="700"
-                fontFamily="Outfit, sans-serif"
-              >
-                {isDepot ? `Depot (0)` : `C${node.id} (${node.demand}u)`}
-              </text>
-              <text
-                x="0"
-                y={isDepot ? -9 : 35}
-                textAnchor="middle"
-                fill="rgba(255,255,255,0.45)"
-                fontSize="9"
-                fontFamily="Fira Code, monospace"
-              >
-                ({node.x.toFixed(1)}, {node.y.toFixed(1)})
-              </text>
+              <line
+                x1={padding - 30}
+                y1={scaleY(val)}
+                x2={width - padding + 30}
+                y2={scaleY(val)}
+                stroke="rgba(255,255,255,0.035)"
+                strokeDasharray="4 4"
+              />
             </g>
-          );
-        })}
-      </svg>
+          ))}
 
-      {/* Progress & Live EV Status Display */}
+          {/* Render Vehicle Route Lines */}
+          {activeRoutes.map((r, idx) => {
+            const origIdx = vehicleFilter === 'all' ? idx : parseInt(vehicleFilter, 10);
+            const pathD = createRoutePathD(r, origIdx);
+            if (!pathD) return null;
+            const style = ROUTE_STYLES[origIdx % ROUTE_STYLES.length];
+
+            return (
+              <path
+                key={idx}
+                d={pathD}
+                fill="none"
+                stroke={style.stroke}
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#glowEffect)"
+              />
+            );
+          })}
+
+          {/* Destination Node Pulse Rings during Animation */}
+          {routeList.map((r, rIdx) => {
+            if (vehicleFilter !== 'all' && parseInt(vehicleFilter, 10) !== rIdx) return null;
+            const pos = calculateVehiclePosition(r);
+            if (!pos || !pos.toNode) return null;
+            const tx = scaleX(pos.toNode.x);
+            const ty = scaleY(pos.toNode.y);
+
+            return (
+              <circle
+                key={`dest-${rIdx}`}
+                cx={tx}
+                cy={ty}
+                r="18"
+                fill="none"
+                stroke="#38bdf8"
+                strokeWidth="2.5"
+                strokeDasharray="4 2"
+              />
+            );
+          })}
+
+          {/* Animated EV Markers */}
+          {routeList.map((r, rIdx) => {
+            if (vehicleFilter !== 'all' && parseInt(vehicleFilter, 10) !== rIdx) return null;
+            const pos = calculateVehiclePosition(r);
+            if (!pos) return null;
+            const style = ROUTE_STYLES[rIdx % ROUTE_STYLES.length];
+
+            return (
+              <g key={`ev-${rIdx}`} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.angle})`}>
+                {/* Glow Aura */}
+                <circle r="16" fill={style.glow} />
+
+                {/* Car Marker Body */}
+                <rect x="-12" y="-7" width="24" height="14" rx="4" fill={style.stroke} stroke="#fff" strokeWidth="1.8" />
+                <circle cx="-6" cy="-7" r="2.5" fill="#fff" />
+                <circle cx="6" cy="-7" r="2.5" fill="#fff" />
+                <circle cx="-6" cy="7" r="2.5" fill="#fff" />
+                <circle cx="6" cy="7" r="2.5" fill="#fff" />
+              </g>
+            );
+          })}
+
+          {/* Render Depot & Customer Nodes */}
+          {nodes.map((node) => {
+            const isDepot = node.id === instance.depotIdx;
+            const cx = scaleX(node.x);
+            const cy = scaleY(node.y);
+
+            // Smart label offset positioning based on node position quadrant
+            const labelOffsetY = cy > height / 2 ? 30 : -22;
+            const coordOffsetY = cy > height / 2 ? 42 : -34;
+
+            return (
+              <g key={node.id} transform={`translate(${cx}, ${cy})`}>
+                {/* Node Outer Ring */}
+                <circle
+                  r={isDepot ? 18 : 13}
+                  fill={isDepot ? 'rgba(245, 158, 11, 0.3)' : 'rgba(6, 182, 212, 0.22)'}
+                  stroke={isDepot ? '#f59e0b' : '#06b6d4'}
+                  strokeWidth="2.2"
+                />
+
+                {/* Node Inner Core */}
+                <circle r={isDepot ? 8 : 6} fill={isDepot ? '#fbbf24' : '#38bdf8'} />
+
+                {/* Node ID & Demand Label */}
+                <text
+                  x="0"
+                  y={labelOffsetY}
+                  textAnchor="middle"
+                  fill={isDepot ? '#fbbf24' : '#f8fafc'}
+                  fontSize="12"
+                  fontWeight="700"
+                  fontFamily="Outfit, sans-serif"
+                >
+                  {isDepot ? `Depot (0)` : `C${node.id} (${node.demand}u)`}
+                </text>
+
+                {/* Coordinates Label */}
+                <text
+                  x="0"
+                  y={coordOffsetY}
+                  textAnchor="middle"
+                  fill="rgba(255,255,255,0.5)"
+                  fontSize="9.5"
+                  fontFamily="Fira Code, monospace"
+                >
+                  ({node.x.toFixed(1)}, {node.y.toFixed(1)})
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Dynamic Vehicle Route Legend */}
       {routeList.length > 0 && (
-        <div style={{ marginTop: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {/* Progress Bar */}
-          <div style={{ background: '#0f172a', padding: '0.75rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div
+          style={{
+            marginTop: '1rem',
+            background: '#0f172a',
+            padding: '0.85rem 1.25rem',
+            borderRadius: '0.75rem',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#f8fafc', marginBottom: '0.5rem', fontFamily: 'var(--font-heading)' }}>
+            Vehicle Route Legend & Active Navigation Status
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {routeList.map((r, rIdx) => {
+              const style = ROUTE_STYLES[rIdx % ROUTE_STYLES.length];
+              const pos = calculateVehiclePosition(r);
+
+              return (
+                <div key={rIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span
+                      style={{
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '4px',
+                        backgroundColor: style.stroke,
+                        display: 'inline-block',
+                      }}
+                    ></span>
+                    <strong style={{ color: style.stroke }}>Vehicle {rIdx + 1}:</strong>
+                    <span className="route-code" style={{ fontSize: '0.825rem' }}>
+                      {r.join(' → ')}
+                    </span>
+                  </div>
+
+                  {pos && (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.04)', padding: '0.2rem 0.6rem', borderRadius: '0.4rem' }}>
+                      Vehicle {rIdx + 1} → <strong style={{ color: '#38bdf8' }}>{pos.statusText}</strong>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Simulation Progress Bar */}
+          <div style={{ marginTop: '0.85rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-              <span>Simulation Progress</span>
+              <span>EV Simulation Progress</span>
               <strong>{Math.round(progress * 100)}%</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', overflow: 'hidden' }}>
@@ -384,34 +460,6 @@ export default function RouteVisualizer({ instance, routes }) {
                 }}
               ></div>
             </div>
-          </div>
-
-          {/* Active Stop Indicators */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-            {routeList.map((r, rIdx) => {
-              if (vehicleFilter !== 'all' && parseInt(vehicleFilter, 10) !== rIdx) return null;
-              const pos = calculateVehiclePosition(r);
-              if (!pos) return null;
-              const style = ROUTE_STYLES[rIdx % ROUTE_STYLES.length];
-
-              return (
-                <div
-                  key={rIdx}
-                  style={{
-                    flex: '1',
-                    minWidth: '220px',
-                    background: '#0f172a',
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: '0.5rem',
-                    border: `1px solid ${style.stroke}`,
-                    fontSize: '0.825rem',
-                  }}
-                >
-                  <strong style={{ color: style.stroke, marginRight: '0.4rem' }}>Vehicle {rIdx + 1}:</strong>
-                  <span style={{ color: '#e2e8f0' }}>{pos.statusText}</span>
-                </div>
-              );
-            })}
           </div>
         </div>
       )}
