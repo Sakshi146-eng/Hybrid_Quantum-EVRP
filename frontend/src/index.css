@@ -200,6 +200,11 @@ body {
   display: grid;
   grid-template-columns: 340px 1fr;
   gap: 1.5rem;
+  width: 100%;
+}
+
+.demo-container > * {
+  min-width: 0;
 }
 
 @media (max-width: 1024px) {
@@ -293,6 +298,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .visualizer-card {
@@ -300,6 +307,40 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 1rem;
   padding: 1.5rem;
+}
+
+/* Table Scroll Container */
+.table-scroll-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0.5rem;
+}
+
+/* Subtle Dark Scrollbar styling for table wrappers & pipeline */
+.table-scroll-container::-webkit-scrollbar,
+.pipeline-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track,
+.pipeline-container::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb,
+.pipeline-container::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover,
+.pipeline-container::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Large 600-700px Route Canvas Wrapper */
@@ -322,6 +363,7 @@ body {
 /* Tables & Code matrices */
 .matrix-table {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -425,6 +467,7 @@ body {
 /* Status Table */
 .status-table {
   width: 100%;
+  min-width: 650px;
   border-collapse: collapse;
   background: var(--bg-card);
   border: 1px solid var(--border-color);

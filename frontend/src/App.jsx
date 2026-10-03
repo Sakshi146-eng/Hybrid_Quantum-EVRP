@@ -432,14 +432,14 @@ export default function App() {
                 <Grid size={18} color="var(--primary-cyan)" /> Customer Node & Demand Table (User Editable)
               </h4>
 
-              <div style={{ overflowX: 'auto', maxHeight: '220px', overflowY: 'auto' }}>
+              <div className="table-scroll-container" style={{ maxHeight: '250px' }}>
                 <table className="matrix-table">
                   <thead>
                     <tr>
-                      <th>Customer ID</th>
-                      <th>X Coordinate</th>
-                      <th>Y Coordinate</th>
-                      <th>Demand (units)</th>
+                      <th style={{ minWidth: '110px' }}>Customer ID</th>
+                      <th style={{ minWidth: '130px' }}>X Coordinate</th>
+                      <th style={{ minWidth: '130px' }}>Y Coordinate</th>
+                      <th style={{ minWidth: '140px' }}>Demand (units)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -592,13 +592,13 @@ export default function App() {
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Values represent pairwise Euclidean distances between nodes</span>
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="matrix-table">
+                <div className="table-scroll-container" style={{ maxHeight: '380px' }}>
+                  <table className="matrix-table" style={{ minWidth: `${Math.max(600, (instance.nodes?.length || 0) * 60)}px` }}>
                     <thead>
                       <tr>
-                        <th>Node</th>
+                        <th style={{ minWidth: '80px' }}>Node</th>
                         {instance.nodes.map((n) => (
-                          <th key={n.id}>{n.type}</th>
+                          <th key={n.id} style={{ minWidth: '60px' }}>{n.type}</th>
                         ))}
                       </tr>
                     </thead>
@@ -670,67 +670,69 @@ export default function App() {
         <h3 className="section-title">
           <Activity className="section-title-icon" size={24} /> Module Implementation Status
         </h3>
-        <table className="status-table">
-          <thead>
-            <tr>
-              <th>Module / Algorithm</th>
-              <th>Description</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Classical VRP Foundation</strong></td>
-              <td>VRPInstance, Euclidean distance matrix, route distance calculation, and validator</td>
-              <td><span className="badge badge-complete">✅ Complete</span></td>
-            </tr>
-            <tr>
-              <td><strong>Classical Solver Architecture</strong></td>
-              <td>BaseVRPSolver and VRPSolution standardized input/output interfaces</td>
-              <td><span className="badge badge-complete">✅ Complete</span></td>
-            </tr>
-            <tr>
-              <td><strong>Genetic Algorithm (GA)</strong></td>
-              <td>Permutation chromosome, OX crossover, swap mutation, elitism, greedy capacity decoding</td>
-              <td><span className="badge badge-complete">✅ Complete</span></td>
-            </tr>
-            <tr>
-              <td><strong>Ant Colony Optimization (ACO)</strong></td>
-              <td>Pheromone matrix update and probabilistic ant route construction</td>
-              <td><span className="badge badge-pending">⏳ Planned</span></td>
-            </tr>
-            <tr>
-              <td><strong>Simulated Annealing (SA)</strong></td>
-              <td>Metropolis acceptance probability and temperature cooling schedule</td>
-              <td><span className="badge badge-pending">⏳ Planned</span></td>
-            </tr>
-            <tr>
-              <td><strong>Tabu Search (TS)</strong></td>
-              <td>Tabu list memory tenure and neighborhood move search</td>
-              <td><span className="badge badge-pending">⏳ Planned</span></td>
-            </tr>
-            <tr>
-              <td><strong>QUBO Formulation</strong></td>
-              <td>Penalty matrices mapping VRP constraints to quadratic terms</td>
-              <td><span className="badge badge-pending">🔄 In Development</span></td>
-            </tr>
-            <tr>
-              <td><strong>QAOA Quantum Solver</strong></td>
-              <td>Parameterized quantum circuit execution on quantum simulators</td>
-              <td><span className="badge badge-pending">🔄 In Development</span></td>
-            </tr>
-            <tr>
-              <td><strong>Reinforcement Learning</strong></td>
-              <td>Policy network optimizing QAOA parameters during quantum sampling</td>
-              <td><span className="badge badge-pending">🔄 In Development</span></td>
-            </tr>
-            <tr>
-              <td><strong>EVRP Extension</strong></td>
-              <td>Battery capacity, energy dissipation, and charging station visits</td>
-              <td><span className="badge badge-pending">🔄 In Development</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="table-scroll-container">
+          <table className="status-table">
+            <thead>
+              <tr>
+                <th style={{ minWidth: '200px' }}>Module / Algorithm</th>
+                <th style={{ minWidth: '320px' }}>Description</th>
+                <th style={{ minWidth: '150px' }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Classical VRP Foundation</strong></td>
+                <td>VRPInstance, Euclidean distance matrix, route distance calculation, and validator</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>Classical Solver Architecture</strong></td>
+                <td>BaseVRPSolver and VRPSolution standardized input/output interfaces</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>Genetic Algorithm (GA)</strong></td>
+                <td>Permutation chromosome, OX crossover, swap mutation, elitism, greedy capacity decoding</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>Ant Colony Optimization (ACO)</strong></td>
+                <td>Pheromone matrix update and probabilistic ant route construction</td>
+                <td><span className="badge badge-pending">⏳ Planned</span></td>
+              </tr>
+              <tr>
+                <td><strong>Simulated Annealing (SA)</strong></td>
+                <td>Metropolis acceptance probability and temperature cooling schedule</td>
+                <td><span className="badge badge-pending">⏳ Planned</span></td>
+              </tr>
+              <tr>
+                <td><strong>Tabu Search (TS)</strong></td>
+                <td>Tabu list memory tenure and neighborhood move search</td>
+                <td><span className="badge badge-pending">⏳ Planned</span></td>
+              </tr>
+              <tr>
+                <td><strong>QUBO Formulation</strong></td>
+                <td>Penalty matrices mapping VRP constraints to quadratic terms</td>
+                <td><span className="badge badge-pending">🔄 In Development</span></td>
+              </tr>
+              <tr>
+                <td><strong>QAOA Quantum Solver</strong></td>
+                <td>Parameterized quantum circuit execution on quantum simulators</td>
+                <td><span className="badge badge-pending">🔄 In Development</span></td>
+              </tr>
+              <tr>
+                <td><strong>Reinforcement Learning</strong></td>
+                <td>Policy network optimizing QAOA parameters during quantum sampling</td>
+                <td><span className="badge badge-pending">🔄 In Development</span></td>
+              </tr>
+              <tr>
+                <td><strong>EVRP Extension</strong></td>
+                <td>Battery capacity, energy dissipation, and charging station visits</td>
+                <td><span className="badge badge-pending">🔄 In Development</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
