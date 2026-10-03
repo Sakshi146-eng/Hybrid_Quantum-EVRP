@@ -1,0 +1,114 @@
+{
+  "instance_ids": [
+    1,
+    15,
+    17,
+    13,
+    14
+  ],
+  "optimal_cost": 60.47255338544452,
+  "classical": {
+    "brute_force": {
+      "cost": 60.47255338544452,
+      "route": [
+        0,
+        3,
+        1,
+        2,
+        4,
+        0
+      ],
+      "seconds": 0.00016260147094726562
+    },
+    "ilp_mtz": {
+      "cost": 60.47255338544452,
+      "route": [
+        0,
+        3,
+        1,
+        2,
+        4,
+        0
+      ],
+      "seconds": 0.010605573654174805
+    },
+    "ortools": {
+      "cost": 60.47255338544451,
+      "route": [
+        0,
+        4,
+        2,
+        1,
+        3,
+        0
+      ],
+      "seconds": 1.1061670780181885
+    },
+    "greedy": {
+      "cost": 65.22493302276713,
+      "route": [
+        0,
+        1,
+        2,
+        4,
+        3,
+        0
+      ],
+      "seconds": 3.8623809814453125e-05
+    }
+  },
+  "qaoa": [
+    {
+      "p": 1,
+      "params": [
+        0.4943459313788227,
+        -0.13026988039322857
+      ],
+      "expected_energy": 9.788590669478925,
+      "energy_improvement": 0.7940542772429388,
+      "prob_optimal": 0.00042180381614316943,
+      "boost_vs_uniform": 221.14667915807001,
+      "evaluations": 64,
+      "gap_pct": 7.8587,
+      "seconds": 247.68201446533203,
+      "feasible_frac": 0.00439453125,
+      "optimal_frac": 0.0,
+      "best_cost": 65.22493302276713,
+      "kind": "arc",
+      "qubits": 20,
+      "penalty": 1.5,
+      "random_baseline": {
+        "feasible_frac": 0.0,
+        "optimal_frac": 0.0,
+        "best_cost": null
+      }
+    },
+    {
+      "p": 2,
+      "params": [
+        0.8565111853162577,
+        0.9662047835886323,
+        0.3212061790124969,
+        0.1814308172444488
+      ],
+      "expected_energy": 14.238236861755805,
+      "energy_improvement": 0.6728803667074544,
+      "prob_optimal": 0.001191131895777337,
+      "boost_vs_uniform": 624.4961593733085,
+      "evaluations": 100,
+      "gap_pct": 0.0,
+      "seconds": 455.708863735199,
+      "feasible_frac": 0.01904296875,
+      "optimal_frac": 0.0009765625,
+      "best_cost": 60.47255338544451,
+      "kind": "arc",
+      "qubits": 20,
+      "penalty": 1.5,
+      "random_baseline": {
+        "feasible_frac": 0.0,
+        "optimal_frac": 0.0,
+        "best_cost": null
+      }
+    }
+  ]
+}
