@@ -10,10 +10,11 @@ sys.path.insert(0, str(root_dir))
 
 import tests.test_setup as ts
 import tests.test_vrp as tv
+import tests.test_classical_base as tcb
 
 if __name__ == "__main__":
-    print("Running VRP Foundation and Setup verification unit tests...")
-    
+    print("Running VRP Foundation, Setup, and Classical Baseline Architecture unit tests...")
+
     test_functions = [
         # Setup tests
         ts.test_config_loader,
@@ -22,7 +23,7 @@ if __name__ == "__main__":
         ts.test_vrp_instance_cost,
         ts.test_evrp_feasibility_checker,
         ts.test_evaluation_metrics,
-        # Task 7 VRP Foundation tests
+        # Classical VRP Foundation tests
         tv.test_1_number_of_nodes,
         tv.test_2_coordinate_storage,
         tv.test_3_distance_matrix_dimensions,
@@ -33,6 +34,11 @@ if __name__ == "__main__":
         tv.test_8_depot_start_end_handling,
         tv.test_9_invalid_route_node_handling,
         tv.test_10_vehicle_capacity_validation,
+        # Phase 1 Classical Baseline Architecture tests
+        tcb.test_vrp_solution_structure_and_dict,
+        tcb.test_abstract_base_solver_enforcement,
+        tcb.test_random_baseline_solver_execution,
+        tcb.test_solver_feasibility_check_infeasible_capacity,
     ]
 
     passed = 0
