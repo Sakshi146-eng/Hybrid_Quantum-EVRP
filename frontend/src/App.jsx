@@ -19,8 +19,9 @@ import {
   Sliders,
   Database,
   Grid,
-  Plus,
-  Trash2,
+  Zap,
+  Server,
+  RefreshCw,
 } from 'lucide-react';
 
 import {
@@ -30,29 +31,41 @@ import {
   validateVRPInstanceConfig,
 } from './utils/vrpLogic';
 import { runClassicalSolver } from './utils/solverApi';
+import {
+  getBenchmarkInstances,
+  getBenchmarkInstance,
+  runBenchmarkGA,
+  checkBackendHealth,
+} from './utils/backendApi';
 import RouteVisualizer from './components/RouteVisualizer';
 
 export default function App() {
-  // Instance Controls State
-  const [numCustomers, setNumCustomers] = useState(5); // Default 5 (5-20 supported)
+  // Mode Selector State: 'demo' (Interactive Demo) vs 'benchmark' (CEC-2020 Benchmark)
+  const [dataSourceMode, setDataSourceMode] = useState('demo');
+
+  // --- DEMO MODE STATES ---
+  const [numCustomers, setNumCustomers] = useState(5);
   const [numVehicles, setNumVehicles] = useState(2);
   const [capacity, setCapacity] = useState(15.0);
-
-  // Depot Coordinates
   const [depotX, setDepotX] = useState(0.0);
   const [depotY, setDepotY] = useState(0.0);
-
-  // Customer Nodes Array State
   const [customerNodes, setCustomerNodes] = useState([]);
 
-  // Selected Algorithm State
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState('ga');
+  // --- BENCHMARK MODE STATES ---
+  const [benchmarkInstances, setBenchmarkInstances] = useState([]);
+  const [selectedInstanceName, setSelectedInstanceName] = useState('');
+  const [benchmarkDetails, setBenchmarkDetails] = useState(null);
+  const [backendHealthy, setBackendHealthy] = useState(false);
+  const [backendError, setBackendError] = useState(null);
+  const [isFetchingBenchmark, setIsFetchingBenchmark] = useState(false);
 
-  // GA Hyperparameters
-  const [gaPopSize, setGaPopSize] = useState(50);
-  const [gaGenerations, setGaGenerations] = useState(100);
-  const [gaCrossoverRate, setGaCrossoverRate] = useState(0.8);
-  const [gaMutationRate, setGaMutationRate] = useState(0.2);
+  // Common Algorithm & Hyperparameter State
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState('ga');
+  const [gaPopSize, setGaPopSize] = useState(100);
+  const [gaGenerations, setGaGenerations] = useState(200);
+  const [gaCrossoverRate, setGaCrossoverRate] = useState(0.85);
+  const [gaMutationRate, setGaMutationRate] = useState(0.25);
+  const [gaSeed, setGaSeed] = useState(42);
 
   // Solution & Toast State
   const [instance, setInstance] = useState(null);
@@ -67,43 +80,119 @@ export default function App() {
     }, 4000);
   };
 
-  // Initialize or update customer nodes when numCustomers changes
+  // --- DEMO MODE INITIALIZATION ---
   useEffect(() => {
-    const baseInst = getDeterministicToyInstance(numCustomers, capacity, numVehicles);
-    // Extract customer nodes (excluding depot)
-    const custs = baseInst.nodes.filter((n) => n.id !== 0);
-    setCustomerNodes(custs);
-  }, [numCustomers]);
+    if (dataSourceMode === 'demo') {
+      const baseInst = getDeterministicToyInstance(numCustomers, capacity, numVehicles);
+      const custs = baseInst.nodes.filter((n) => n.id !== 0);
+      setCustomerNodes(custs);
+      setSolution(null);
+    }
+  }, [numCustomers, dataSourceMode]);
 
-  // Re-build VRPInstance whenever nodes, depot, capacity, or numVehicles change
   useEffect(() => {
-    const fullNodes = [
-      { id: 0, type: 'Depot', x: parseFloat(depotX) || 0.0, y: parseFloat(depotY) || 0.0, demand: 0.0 },
-      ...customerNodes.map((c, i) => ({
-        id: i + 1,
-        type: `Cust ${i + 1}`,
-        x: parseFloat(c.x) || 0.0,
-        y: parseFloat(c.y) || 0.0,
-        demand: parseFloat(c.demand) || 0.0,
-      })),
-    ];
+    if (dataSourceMode === 'demo') {
+      const fullNodes = [
+        { id: 0, type: 'Depot', x: parseFloat(depotX) || 0.0, y: parseFloat(depotY) || 0.0, demand: 0.0 },
+        ...customerNodes.map((c, i) => ({
+          id: i + 1,
+          type: `Cust ${i + 1}`,
+          x: parseFloat(c.x) || 0.0,
+          y: parseFloat(c.y) || 0.0,
+          demand: parseFloat(c.demand) || 0.0,
+        })),
+      ];
+      const inst = buildInstanceFromNodes(fullNodes, customerNodes.length, capacity, numVehicles);
+      setInstance(inst);
+    }
+  }, [customerNodes, depotX, depotY, capacity, numVehicles, dataSourceMode]);
 
-    const inst = buildInstanceFromNodes(fullNodes, customerNodes.length, capacity, numVehicles);
-    setInstance(inst);
-  }, [customerNodes, depotX, depotY, capacity, numVehicles]);
+  // --- BENCHMARK MODE DISCOVERY ---
+  const loadBenchmarkDiscovery = async () => {
+    setIsFetchingBenchmark(true);
+    setBackendError(null);
+    try {
+      const isHealthy = await checkBackendHealth();
+      setBackendHealthy(isHealthy);
 
-  // Handle Customer Table Cell Editing
+      if (!isHealthy) {
+        setBackendError('FastAPI backend server is offline. Please start uvicorn backend.main:app --reload on http://localhost:8000.');
+        setIsFetchingBenchmark(false);
+        return;
+      }
+
+      const instList = await getBenchmarkInstances();
+      setBenchmarkInstances(instList);
+
+      if (instList.length > 0) {
+        const defaultName = instList.some((i) => i.name === 'E-n29-k4-s7.evrp')
+          ? 'E-n29-k4-s7.evrp'
+          : instList[0].name;
+        setSelectedInstanceName(defaultName);
+        await fetchAndSetBenchmarkDetails(defaultName);
+      }
+    } catch (err) {
+      setBackendError(err.message);
+    } finally {
+      setIsFetchingBenchmark(false);
+    }
+  };
+
+  const fetchAndSetBenchmarkDetails = async (instanceName) => {
+    try {
+      setIsFetchingBenchmark(true);
+      const details = await getBenchmarkInstance(instanceName);
+      setBenchmarkDetails(details);
+      setSolution(null);
+
+      // Build VRPInstance object format for RouteVisualizer
+      const nodes = [
+        { id: 0, type: 'Depot', x: details.depot.x, y: details.depot.y, demand: 0 },
+        ...details.customers.map((c) => ({
+          id: c.id,
+          type: `Cust ${c.id}`,
+          x: c.x,
+          y: c.y,
+          demand: c.demand,
+        })),
+      ];
+
+      setInstance({
+        nodes,
+        numCustomers: details.num_customers,
+        numVehicles: details.num_vehicles,
+        vehicleCapacity: details.vehicle_capacity,
+        totalDemand: details.total_demand,
+        depotIdx: 0,
+        charging_stations: details.charging_stations || [],
+      });
+    } catch (err) {
+      setBackendError(err.message);
+    } finally {
+      setIsFetchingBenchmark(false);
+    }
+  };
+
+  useEffect(() => {
+    if (dataSourceMode === 'benchmark') {
+      loadBenchmarkDiscovery();
+    }
+  }, [dataSourceMode]);
+
+  const handleBenchmarkSelect = async (e) => {
+    const name = e.target.value;
+    setSelectedInstanceName(name);
+    await fetchAndSetBenchmarkDetails(name);
+  };
+
+  // Demo customer table cell editing
   const handleCustomerChange = (index, field, value) => {
     const updated = [...customerNodes];
-    updated[index] = {
-      ...updated[index],
-      [field]: value,
-    };
+    updated[index] = { ...updated[index], [field]: value };
     setCustomerNodes(updated);
     setSolution(null);
   };
 
-  // Generate Random Customer Coordinates while preserving editable table
   const handleGenerateRandomCustomers = () => {
     const newInst = generateRandomCustomers(numCustomers, capacity, numVehicles, depotX, depotY);
     const custs = newInst.nodes.filter((n) => n.id !== 0);
@@ -112,34 +201,68 @@ export default function App() {
     showToast(`Generated random customer coordinates for ${numCustomers} customers.`, 'success');
   };
 
-  // Instance Configuration Feasibility Validation
-  const configVal = instance ? validateVRPInstanceConfig(instance) : { isValid: true, errors: [] };
+  const configVal = instance && dataSourceMode === 'demo'
+    ? validateVRPInstanceConfig(instance)
+    : { isValid: true, errors: [] };
 
-  // Run Selected Classical Solver
+  // --- SOLVER EXECUTION ROUTER ---
   const handleRunAlgorithm = async () => {
-    if (!instance) return;
-
-    if (!configVal.isValid) {
-      showToast(configVal.errors[0], 'error');
-      return;
-    }
-
     setIsRunning(true);
-    try {
-      const sol = await runClassicalSolver(selectedAlgorithm, instance, {
-        populationSize: parseInt(gaPopSize, 10) || 50,
-        generations: parseInt(gaGenerations, 10) || 100,
-        crossoverRate: parseFloat(gaCrossoverRate) || 0.8,
-        mutationRate: parseFloat(gaMutationRate) || 0.2,
-      });
+    setBackendError(null);
 
-      setSolution(sol);
-      if (sol.feasible) {
-        showToast(`${sol.algorithm_name} solved instance! Distance: ${sol.total_distance} units. Feasible Solution ✓`, 'success');
+    try {
+      if (dataSourceMode === 'benchmark') {
+        if (!selectedInstanceName) {
+          throw new Error('Please select a valid benchmark instance.');
+        }
+
+        const solData = await runBenchmarkGA(selectedInstanceName, parseInt(gaSeed, 10) || 42, {
+          population_size: parseInt(gaPopSize, 10) || 100,
+          generations: parseInt(gaGenerations, 10) || 200,
+          crossover_rate: parseFloat(gaCrossoverRate) || 0.85,
+          mutation_rate: parseFloat(gaMutationRate) || 0.25,
+        });
+
+        // Convert backend route response format to solution state
+        const sol = {
+          algorithm_name: solData.algorithm,
+          total_distance: solData.total_distance,
+          runtime_seconds: solData.runtime_seconds,
+          feasible: solData.feasible,
+          vehicle_loads: solData.routes.map((r) => r.load),
+          routes: solData.routes.map((r) => r.route),
+        };
+
+        setSolution(sol);
+        if (sol.feasible) {
+          showToast(`GA solved benchmark ${solData.instance_name}! Total Distance: ${solData.total_distance} units. Feasible ✓`, 'success');
+        } else {
+          showToast(`GA completed ${solData.instance_name} with distance ${solData.total_distance} units. Feasible: NO`, 'warning');
+        }
       } else {
-        showToast(`${sol.algorithm_name} produced infeasible route.`, 'warning');
+        // Interactive Demo mode client-side execution
+        if (!configVal.isValid) {
+          showToast(configVal.errors[0], 'error');
+          setIsRunning(false);
+          return;
+        }
+
+        const sol = await runClassicalSolver(selectedAlgorithm, instance, {
+          populationSize: parseInt(gaPopSize, 10) || 50,
+          generations: parseInt(gaGenerations, 10) || 100,
+          crossoverRate: parseFloat(gaCrossoverRate) || 0.8,
+          mutationRate: parseFloat(gaMutationRate) || 0.2,
+        });
+
+        setSolution(sol);
+        if (sol.feasible) {
+          showToast(`${sol.algorithm_name} solved instance! Distance: ${sol.total_distance} units. Feasible Solution ✓`, 'success');
+        } else {
+          showToast(`${sol.algorithm_name} produced infeasible route.`, 'warning');
+        }
       }
     } catch (err) {
+      setBackendError(err.message);
       showToast(err.message, 'error');
     } finally {
       setIsRunning(false);
@@ -188,176 +311,308 @@ export default function App() {
       {/* 1. PROJECT HEADER */}
       <header className="header">
         <div className="header-badge">
-          <Sparkles size={16} /> VRP Simulator & Classical GA Baseline Operational
+          <Sparkles size={16} /> CEC-2020 E-CVRP Benchmark & FastAPI Python GA Integrated
         </div>
         <h1 className="header-title">Quantum-Assisted Electric Vehicle Routing</h1>
         <h2 className="header-subtitle">Using Hybrid Optimization</h2>
         <p style={{ maxWidth: '780px', margin: '1rem auto 0', color: 'var(--text-muted)', fontSize: '0.975rem' }}>
-          The project studies a hybrid quantum-classical optimization framework for Vehicle Routing and extends it toward the Electric Vehicle Routing Problem.
+          Real Python execution bridge connecting CEC-2020 E-CVRP benchmark test suite, classical Genetic Algorithm, and FastAPI backend to interactive visualization.
         </p>
       </header>
 
-      {/* 2. CLASSICAL VRP SIMULATOR CONTROLS & INSTANCE BUILDER */}
+      {/* 2. MODE SELECTOR TABS */}
+      <section className="section" style={{ marginBottom: '1.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justify: 'center',
+            gap: '1rem',
+            background: '#0f172a',
+            padding: '0.6rem 1rem',
+            borderRadius: '1rem',
+            border: '1px solid rgba(255,255,255,0.08)',
+            maxWidth: '520px',
+            margin: '0 auto',
+          }}
+        >
+          <button
+            style={{
+              flex: 1,
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              background: dataSourceMode === 'demo' ? 'var(--primary-cyan)' : 'transparent',
+              color: dataSourceMode === 'demo' ? '#0f172a' : 'var(--text-muted)',
+              transition: 'all 0.2s ease',
+            }}
+            onClick={() => setDataSourceMode('demo')}
+          >
+            <Sliders size={18} /> Interactive Demo
+          </button>
+
+          <button
+            style={{
+              flex: 1,
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              background: dataSourceMode === 'benchmark' ? 'var(--primary-cyan)' : 'transparent',
+              color: dataSourceMode === 'benchmark' ? '#0f172a' : 'var(--text-muted)',
+              transition: 'all 0.2s ease',
+            }}
+            onClick={() => setDataSourceMode('benchmark')}
+          >
+            <Database size={18} /> CEC-2020 Benchmark
+          </button>
+        </div>
+      </section>
+
+      {/* 3. VRP SIMULATOR CONTROLS & INSTANCE BUILDER */}
       <section className="section">
         <h3 className="section-title">
-          <Cpu className="section-title-icon" size={24} /> VRP Simulator & Instance Configuration
+          <Cpu className="section-title-icon" size={24} />
+          {dataSourceMode === 'benchmark' ? 'CEC-2020 Benchmark GA Solver' : 'VRP Simulator & Instance Configuration'}
         </h3>
+
+        {/* Backend Error Banner */}
+        {backendError && (
+          <div
+            style={{
+              marginBottom: '1.5rem',
+              padding: '1rem 1.25rem',
+              background: 'rgba(244,63,94,0.12)',
+              border: '1px solid #f43f5e',
+              borderRadius: '0.75rem',
+              color: '#fb7185',
+              fontSize: '0.9rem',
+              lineHeight: '1.5',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem',
+            }}
+          >
+            <AlertTriangle size={20} style={{ shrink: 0, marginTop: '2px' }} />
+            <div>
+              <strong style={{ display: 'block', marginBottom: '0.2rem' }}>Backend Connection Error</strong>
+              {backendError}
+              <div style={{ marginTop: '0.5rem' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
+                  onClick={loadBenchmarkDiscovery}
+                >
+                  <RefreshCw size={14} /> Retry Connection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="demo-container">
           {/* Controls Panel */}
           <div className="control-panel">
-            <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', marginBottom: '1.25rem', color: '#f8fafc' }}>
-              Instance Configuration
+            <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', marginBottom: '1.25rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {dataSourceMode === 'benchmark' ? <Server size={18} color="var(--primary-cyan)" /> : <Sliders size={18} color="var(--primary-cyan)" />}
+              {dataSourceMode === 'benchmark' ? 'Benchmark Settings' : 'Instance Configuration'}
             </h4>
 
-            {/* Algorithm Selector */}
-            <div className="form-group">
-              <label className="form-label">Select Classical Algorithm</label>
-              <select
-                className="form-select"
-                value={selectedAlgorithm}
-                onChange={(e) => setSelectedAlgorithm(e.target.value)}
-              >
-                <option value="ga">Genetic Algorithm (GA) — Active ✅</option>
-                <option value="aco" disabled>Ant Colony Optimization (ACO) — Coming Soon 🔲</option>
-                <option value="sa" disabled>Simulated Annealing (SA) — Coming Soon 🔲</option>
-                <option value="tabu_search" disabled>Tabu Search (TS) — Coming Soon 🔲</option>
-              </select>
-            </div>
-
-            {/* Number of Customers Slider (5 - 20) */}
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="form-label">Number of Customers</label>
-                <strong style={{ color: 'var(--primary-cyan)', fontSize: '0.9rem' }}>{numCustomers}</strong>
+            {/* Benchmark Dropdown Selector */}
+            {dataSourceMode === 'benchmark' ? (
+              <div className="form-group">
+                <label className="form-label">Select .evrp Benchmark Instance</label>
+                <select
+                  className="form-select"
+                  value={selectedInstanceName}
+                  onChange={handleBenchmarkSelect}
+                  disabled={isFetchingBenchmark || benchmarkInstances.length === 0}
+                >
+                  {benchmarkInstances.map((inst) => (
+                    <option key={inst.name} value={inst.name}>
+                      {inst.name} ({inst.customers} cust, {inst.vehicles} veh, Q={inst.vehicle_capacity})
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.35rem' }}>
+                  Discovered from <code style={{ color: 'var(--primary-cyan)' }}>data/raw/e_cvrp/</code> directory
+                </span>
               </div>
-              <input
-                type="range"
-                min="5"
-                max="20"
-                step="1"
-                style={{ width: '100%', accentColor: 'var(--primary-cyan)' }}
-                value={numCustomers}
-                onChange={(e) => setNumCustomers(parseInt(e.target.value, 10))}
-              />
-            </div>
-
-            {/* Number of Vehicles */}
-            <div className="form-group">
-              <label className="form-label">Number of Vehicles</label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                className="form-input"
-                value={numVehicles}
-                onChange={(e) => setNumVehicles(parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-
-            {/* Vehicle Capacity */}
-            <div className="form-group">
-              <label className="form-label">Vehicle Capacity (units)</label>
-              <input
-                type="number"
-                step="1"
-                min="1"
-                className="form-input"
-                value={capacity}
-                onChange={(e) => setCapacity(e.target.value)}
-              />
-            </div>
-
-            {/* Depot Coordinates */}
-            <div className="form-group">
-              <label className="form-label">Depot Coordinates (X, Y)</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <input
-                  type="number"
-                  step="0.5"
-                  className="form-input"
-                  placeholder="X"
-                  value={depotX}
-                  onChange={(e) => setDepotX(e.target.value)}
-                />
-                <input
-                  type="number"
-                  step="0.5"
-                  className="form-input"
-                  placeholder="Y"
-                  value={depotY}
-                  onChange={(e) => setDepotY(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <button
-              className="btn btn-secondary"
-              style={{ width: '100%', marginBottom: '1rem' }}
-              onClick={handleGenerateRandomCustomers}
-            >
-              <Shuffle size={18} /> Generate Customers (Random 2D)
-            </button>
-
-            {/* GA Hyperparameters */}
-            {selectedAlgorithm === 'ga' && (
-              <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--primary-cyan)', fontWeight: '600' }}>
-                  <Sliders size={16} /> GA Hyperparameters
+            ) : (
+              <>
+                {/* Algorithm Selector */}
+                <div className="form-group">
+                  <label className="form-label">Select Classical Algorithm</label>
+                  <select
+                    className="form-select"
+                    value={selectedAlgorithm}
+                    onChange={(e) => setSelectedAlgorithm(e.target.value)}
+                  >
+                    <option value="ga">Genetic Algorithm (GA) — Active ✅</option>
+                    <option value="aco" disabled>Ant Colony Optimization (ACO) — Coming Soon 🔲</option>
+                    <option value="sa" disabled>Simulated Annealing (SA) — Coming Soon 🔲</option>
+                    <option value="tabu_search" disabled>Tabu Search (TS) — Coming Soon 🔲</option>
+                  </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  <div>
-                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Pop Size</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                      value={gaPopSize}
-                      onChange={(e) => setGaPopSize(e.target.value)}
-                    />
+                {/* Number of Customers Slider (5 - 20) */}
+                <div className="form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="form-label">Number of Customers</label>
+                    <strong style={{ color: 'var(--primary-cyan)', fontSize: '0.9rem' }}>{numCustomers}</strong>
                   </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="20"
+                    step="1"
+                    style={{ width: '100%', accentColor: 'var(--primary-cyan)' }}
+                    value={numCustomers}
+                    onChange={(e) => setNumCustomers(parseInt(e.target.value, 10))}
+                  />
+                </div>
 
-                  <div>
-                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Generations</label>
+                {/* Number of Vehicles */}
+                <div className="form-group">
+                  <label className="form-label">Number of Vehicles</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    className="form-input"
+                    value={numVehicles}
+                    onChange={(e) => setNumVehicles(parseInt(e.target.value, 10) || 1)}
+                  />
+                </div>
+
+                {/* Vehicle Capacity */}
+                <div className="form-group">
+                  <label className="form-label">Vehicle Capacity (units)</label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    className="form-input"
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                  />
+                </div>
+
+                {/* Depot Coordinates */}
+                <div className="form-group">
+                  <label className="form-label">Depot Coordinates (X, Y)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                     <input
                       type="number"
+                      step="0.5"
                       className="form-input"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                      value={gaGenerations}
-                      onChange={(e) => setGaGenerations(e.target.value)}
+                      placeholder="X"
+                      value={depotX}
+                      onChange={(e) => setDepotX(e.target.value)}
                     />
-                  </div>
-
-                  <div>
-                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Crossover Rate</label>
                     <input
                       type="number"
-                      step="0.05"
+                      step="0.5"
                       className="form-input"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                      value={gaCrossoverRate}
-                      onChange={(e) => setGaCrossoverRate(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Mutation Rate</label>
-                    <input
-                      type="number"
-                      step="0.05"
-                      className="form-input"
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
-                      value={gaMutationRate}
-                      onChange={(e) => setGaMutationRate(e.target.value)}
+                      placeholder="Y"
+                      value={depotY}
+                      onChange={(e) => setDepotY(e.target.value)}
                     />
                   </div>
                 </div>
-              </div>
+
+                <button
+                  className="btn btn-secondary"
+                  style={{ width: '100%', marginBottom: '1rem' }}
+                  onClick={handleGenerateRandomCustomers}
+                >
+                  <Shuffle size={18} /> Generate Customers (Random 2D)
+                </button>
+              </>
             )}
 
-            {/* Infeasibility Warning Banner */}
-            {!configVal.isValid && (
+            {/* GA Hyperparameters */}
+            <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--primary-cyan)', fontWeight: '600' }}>
+                <Sliders size={16} /> Python GA Hyperparameters
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Pop Size</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    value={gaPopSize}
+                    onChange={(e) => setGaPopSize(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Generations</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    value={gaGenerations}
+                    onChange={(e) => setGaGenerations(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Crossover Rate</label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    className="form-input"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    value={gaCrossoverRate}
+                    onChange={(e) => setGaCrossoverRate(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Mutation Rate</label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    className="form-input"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                    value={gaMutationRate}
+                    onChange={(e) => setGaMutationRate(e.target.value)}
+                  />
+                </div>
+
+                {dataSourceMode === 'benchmark' && (
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Random Seed</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={gaSeed}
+                      onChange={(e) => setGaSeed(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Infeasibility Warning Banner (Demo mode) */}
+            {dataSourceMode === 'demo' && !configVal.isValid && (
               <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(244,63,94,0.12)', border: '1px solid #f43f5e', borderRadius: '0.6rem', color: '#fb7185', fontSize: '0.85rem', lineHeight: '1.4' }}>
                 <div style={{ fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <AlertTriangle size={16} /> Configuration Infeasible
@@ -369,120 +624,181 @@ export default function App() {
             {/* Action Button */}
             <button
               className="btn btn-primary"
-              style={{ width: '100%', opacity: !configVal.isValid || isRunning ? 0.5 : 1.0, cursor: !configVal.isValid || isRunning ? 'not-allowed' : 'pointer' }}
+              style={{
+                width: '100%',
+                opacity: (dataSourceMode === 'demo' && !configVal.isValid) || isRunning ? 0.5 : 1.0,
+                cursor: (dataSourceMode === 'demo' && !configVal.isValid) || isRunning ? 'not-allowed' : 'pointer',
+              }}
               onClick={handleRunAlgorithm}
-              disabled={!configVal.isValid || isRunning}
+              disabled={(dataSourceMode === 'demo' && !configVal.isValid) || isRunning}
             >
-              <Play size={18} /> {isRunning ? 'Running Optimization...' : 'Run Algorithm'}
+              <Play size={18} /> {isRunning ? 'Running Genetic Algorithm...' : 'Run Genetic Algorithm'}
             </button>
           </div>
 
-          {/* Right Panel: Instance Specifications & Customer Table */}
+          {/* Right Panel: Instance Specifications & Details */}
           <div className="display-panel">
             {/* Instance Specification Summary Card */}
-            {configVal && (
-              <div className="card" style={{ background: '#0f172a' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Database size={18} className="card-icon" /> VRP Instance Specifications
-                  </h4>
-                  {configVal.isValid ? (
-                    <span className="badge badge-complete"><CheckCircle2 size={12} /> Configuration Valid</span>
-                  ) : (
-                    <span className="badge badge-invalid"><AlertTriangle size={12} /> Instance Infeasible</span>
-                  )}
-                </div>
+            {dataSourceMode === 'benchmark' ? (
+              benchmarkDetails ? (
+                <div className="card" style={{ background: '#0f172a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                    <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Database size={18} className="card-icon" /> Benchmark Instance: {benchmarkDetails.name}
+                    </h4>
+                    <span className="badge badge-complete"><CheckCircle2 size={12} /> CEC-2020 Loaded</span>
+                  </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', fontSize: '0.875rem' }}>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Customers</span>
-                    <strong>{numCustomers}</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', fontSize: '0.875rem', marginBottom: '1rem' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Customers</span>
+                      <strong>{benchmarkDetails.num_customers}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles Fleet</span>
+                      <strong>{benchmarkDetails.num_vehicles}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicle Capacity</span>
+                      <strong>{benchmarkDetails.vehicle_capacity} units</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Demand</span>
+                      <strong style={{ color: 'var(--primary-cyan)' }}>{benchmarkDetails.total_demand} units</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Reference Value</span>
+                      <strong style={{ color: '#a5b4fc' }}>{benchmarkDetails.optimal_value ?? 'N/A'}</strong>
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles</span>
-                    <strong>{numVehicles}</strong>
+
+                  {/* Informational EV Parameters Box */}
+                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px stroke rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#34d399', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Zap size={14} /> Informational EV Metadata (Phase 2 EVRP Extensions)
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.6rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <div>Battery Capacity: <strong style={{ color: '#f8fafc' }}>{benchmarkDetails.energy_capacity ?? 'N/A'}</strong></div>
+                      <div>Energy Consumption: <strong style={{ color: '#f8fafc' }}>{benchmarkDetails.energy_consumption ?? 'N/A'}</strong></div>
+                      <div>Charging Stations: <strong style={{ color: '#f8fafc' }}>{benchmarkDetails.num_stations ?? 0}</strong></div>
+                    </div>
+                    <p style={{ fontSize: '0.725rem', color: 'var(--text-muted)', marginTop: '0.4rem', fontStyle: 'italic', marginBottom: 0 }}>
+                      Note: Current GA baseline evaluates classical CVRP routing. Battery & charging station constraints will be enforced in Phase 2.
+                    </p>
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicle Capacity</span>
-                    <strong>{capacity} units</strong>
+                </div>
+              ) : (
+                <div className="card" style={{ background: '#0f172a', padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  Loading benchmark instance details...
+                </div>
+              )
+            ) : (
+              configVal && (
+                <div className="card" style={{ background: '#0f172a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                    <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Database size={18} className="card-icon" /> VRP Instance Specifications
+                    </h4>
+                    {configVal.isValid ? (
+                      <span className="badge badge-complete"><CheckCircle2 size={12} /> Configuration Valid</span>
+                    ) : (
+                      <span className="badge badge-invalid"><AlertTriangle size={12} /> Instance Infeasible</span>
+                    )}
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Demand</span>
-                    <strong style={{ color: 'var(--primary-cyan)' }}>{configVal.totalDemand} units</strong>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem', fontSize: '0.875rem' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Customers</span>
+                      <strong>{numCustomers}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicles</span>
+                      <strong>{numVehicles}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Vehicle Capacity</span>
+                      <strong>{capacity} units</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Demand</span>
+                      <strong style={{ color: 'var(--primary-cyan)' }}>{configVal.totalDemand} units</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Max Customer Demand</span>
+                      <strong style={{ color: configVal.vehicleCapacity < configVal.maxDemand ? '#fb7185' : '#34d399' }}>
+                        {configVal.maxDemand} units
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Fleet Capacity</span>
+                      <strong style={{ color: configVal.maxFleetCapacity < configVal.totalDemand ? '#fb7185' : '#34d399' }}>
+                        {configVal.maxFleetCapacity} units
+                      </strong>
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Max Customer Demand</span>
-                    <strong style={{ color: configVal.vehicleCapacity < configVal.maxDemand ? '#fb7185' : '#34d399' }}>
-                      {configVal.maxDemand} units
-                    </strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Total Fleet Capacity</span>
-                    <strong style={{ color: configVal.maxFleetCapacity < configVal.totalDemand ? '#fb7185' : '#34d399' }}>
-                      {configVal.maxFleetCapacity} units
-                    </strong>
-                  </div>
+                </div>
+              )
+            )}
+
+            {/* Customer Table (Interactive Demo only) */}
+            {dataSourceMode === 'demo' && (
+              <div className="card">
+                <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', marginBottom: '0.85rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Grid size={18} color="var(--primary-cyan)" /> Customer Node & Demand Table (User Editable)
+                </h4>
+
+                <div className="table-scroll-container" style={{ maxHeight: '220px' }}>
+                  <table className="matrix-table">
+                    <thead>
+                      <tr>
+                        <th style={{ minWidth: '110px' }}>Customer ID</th>
+                        <th style={{ minWidth: '130px' }}>X Coordinate</th>
+                        <th style={{ minWidth: '130px' }}>Y Coordinate</th>
+                        <th style={{ minWidth: '140px' }}>Demand (units)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customerNodes.map((cust, idx) => (
+                        <tr key={cust.id}>
+                          <th style={{ color: 'var(--primary-cyan)' }}>Cust {cust.id}</th>
+                          <td>
+                            <input
+                              type="number"
+                              step="0.1"
+                              className="form-input"
+                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center' }}
+                              value={cust.x}
+                              onChange={(e) => handleCustomerChange(idx, 'x', e.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              step="0.1"
+                              className="form-input"
+                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center' }}
+                              value={cust.y}
+                              onChange={(e) => handleCustomerChange(idx, 'y', e.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              step="0.5"
+                              min="0"
+                              className="form-input"
+                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center', fontWeight: '700', color: '#34d399' }}
+                              value={cust.demand}
+                              onChange={(e) => handleCustomerChange(idx, 'demand', e.target.value)}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
-
-            {/* Interactive User-Editable Customer Table */}
-            <div className="card">
-              <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', marginBottom: '0.85rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Grid size={18} color="var(--primary-cyan)" /> Customer Node & Demand Table (User Editable)
-              </h4>
-
-              <div className="table-scroll-container" style={{ maxHeight: '250px' }}>
-                <table className="matrix-table">
-                  <thead>
-                    <tr>
-                      <th style={{ minWidth: '110px' }}>Customer ID</th>
-                      <th style={{ minWidth: '130px' }}>X Coordinate</th>
-                      <th style={{ minWidth: '130px' }}>Y Coordinate</th>
-                      <th style={{ minWidth: '140px' }}>Demand (units)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customerNodes.map((cust, idx) => (
-                      <tr key={cust.id}>
-                        <th style={{ color: 'var(--primary-cyan)' }}>Cust {cust.id}</th>
-                        <td>
-                          <input
-                            type="number"
-                            step="0.1"
-                            className="form-input"
-                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center' }}
-                            value={cust.x}
-                            onChange={(e) => handleCustomerChange(idx, 'x', e.target.value)}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            step="0.1"
-                            className="form-input"
-                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center' }}
-                            value={cust.y}
-                            onChange={(e) => handleCustomerChange(idx, 'y', e.target.value)}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            step="0.5"
-                            min="0"
-                            className="form-input"
-                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', textAlign: 'center', fontWeight: '700', color: '#34d399' }}
-                            value={cust.demand}
-                            onChange={(e) => handleCustomerChange(idx, 'demand', e.target.value)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
 
             {/* Animated Route Visualizer & VRPSolution Card */}
             <div className="visualizer-card">
@@ -521,7 +837,7 @@ export default function App() {
                     <div style={{ background: '#0f172a', padding: '0.85rem 1rem', borderRadius: '0.6rem', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Distance</div>
                       <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--primary-cyan)', fontFamily: 'var(--font-heading)' }}>
-                        {solution.total_distance} units
+                        {solution.total_distance.toFixed(4)} units
                       </div>
                     </div>
 
@@ -554,7 +870,7 @@ export default function App() {
                           borderRadius: '0.5rem',
                           border: '1px solid rgba(255,255,255,0.06)',
                           display: 'flex',
-                          justify: 'space-between',
+                          justifyContent: 'space-between',
                           alignItems: 'center',
                           flexWrap: 'wrap',
                           gap: '0.5rem',
@@ -569,7 +885,7 @@ export default function App() {
                           </span>
                         </div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                          Load: <strong>{solution.vehicle_loads[rIdx] || 0} / {instance.vehicleCapacity} units</strong>
+                          Load: <strong>{solution.vehicle_loads[rIdx] || 0} / {instance?.vehicleCapacity} units</strong>
                         </div>
                       </div>
                     ))}
@@ -577,52 +893,15 @@ export default function App() {
                 </div>
               ) : (
                 <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                  No solution generated yet. Select an algorithm and click <strong>'Run Algorithm'</strong>.
+                  No solution generated yet. Click <strong>'Run Genetic Algorithm'</strong> to execute Python GA on the benchmark instance.
                 </div>
               )}
             </div>
-
-            {/* Pairwise Distance Matrix Table */}
-            {instance && (
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Grid size={18} color="var(--primary-cyan)" /> Pairwise Euclidean Distance Matrix (N x N)
-                  </h4>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Values represent pairwise Euclidean distances between nodes</span>
-                </div>
-
-                <div className="table-scroll-container" style={{ maxHeight: '380px' }}>
-                  <table className="matrix-table" style={{ minWidth: `${Math.max(600, (instance.nodes?.length || 0) * 60)}px` }}>
-                    <thead>
-                      <tr>
-                        <th style={{ minWidth: '80px' }}>Node</th>
-                        {instance.nodes.map((n) => (
-                          <th key={n.id} style={{ minWidth: '60px' }}>{n.type}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {instance.distanceMatrix.map((row, i) => (
-                        <tr key={i}>
-                          <th>{instance.nodes[i].type}</th>
-                          {row.map((val, j) => (
-                            <td key={j} className={i === j ? 'diagonal' : ''}>
-                              {val.toFixed(2)}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
 
-      {/* 3. METHODOLOGY PIPELINE */}
+      {/* 4. METHODOLOGY PIPELINE */}
       <section className="section">
         <h3 className="section-title">
           <BrainCircuit className="section-title-icon" size={24} /> Overall Research Pipeline
@@ -665,7 +944,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 4. DEVELOPMENT STATUS SECTION */}
+      {/* 5. DEVELOPMENT STATUS SECTION */}
       <section className="section">
         <h3 className="section-title">
           <Activity className="section-title-icon" size={24} /> Module Implementation Status
@@ -686,8 +965,8 @@ export default function App() {
                 <td><span className="badge badge-complete">✅ Complete</span></td>
               </tr>
               <tr>
-                <td><strong>Classical Solver Architecture</strong></td>
-                <td>BaseVRPSolver and VRPSolution standardized input/output interfaces</td>
+                <td><strong>CEC-2020 E-CVRP Benchmark Loader</strong></td>
+                <td>Dataset parser (e_cvrp_loader.py) and FastAPI REST API backend bridge</td>
                 <td><span className="badge badge-complete">✅ Complete</span></td>
               </tr>
               <tr>

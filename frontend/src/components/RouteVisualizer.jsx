@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, FastForward, Navigation } from 'lucide-react';
+import { Play, Pause, RotateCcw, FastForward, Navigation, Zap } from 'lucide-react';
 
-// Visually distinct color styles per vehicle
+// Visually distinct color styles per vehicle route
 const ROUTE_STYLES = [
   { stroke: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)', bg: '#06b6d4', name: 'Vehicle 1' },
   { stroke: '#10b981', glow: 'rgba(16, 185, 129, 0.4)', bg: '#10b981', name: 'Vehicle 2' },
   { stroke: '#a855f7', glow: 'rgba(168, 85, 247, 0.4)', bg: '#a855f7', name: 'Vehicle 3' },
   { stroke: '#f43f5e', glow: 'rgba(244, 63, 94, 0.4)', bg: '#f43f5e', name: 'Vehicle 4' },
   { stroke: '#f59e0b', glow: 'rgba(245, 158, 11, 0.4)', bg: '#f59e0b', name: 'Vehicle 5' },
+  { stroke: '#ec4899', glow: 'rgba(236, 72, 153, 0.4)', bg: '#ec4899', name: 'Vehicle 6' },
+  { stroke: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)', bg: '#3b82f6', name: 'Vehicle 7' },
+  { stroke: '#84cc16', glow: 'rgba(132, 204, 22, 0.4)', bg: '#84cc16', name: 'Vehicle 8' },
 ];
 
 export default function RouteVisualizer({ instance, routes }) {
-  if (!instance || !instance.nodes) return null;
+  if (!instance || !instance.nodes || instance.nodes.length === 0) return null;
 
   const { nodes } = instance;
+  const chargingStations = instance.charging_stations || [];
 
   // Animation Control States
   const [isPlaying, setIsPlaying] = useState(false);
@@ -26,13 +30,22 @@ export default function RouteVisualizer({ instance, routes }) {
   // Spacious 1000 x 650 SVG Coordinate Viewport
   const width = 1000;
   const height = 650;
-  const padding = 80;
+  const padding = 70;
 
-  const maxX = Math.max(...nodes.map((n) => n.x), 6.5);
-  const maxY = Math.max(...nodes.map((n) => n.y), 6.5);
+  // Compute bounding box across all nodes and charging stations
+  const allX = [...nodes.map((n) => n.x), ...chargingStations.map((s) => s.x)];
+  const allY = [...nodes.map((n) => n.y), ...chargingStations.map((s) => s.y)];
 
-  const scaleX = (x) => padding + (x / maxX) * (width - 2 * padding);
-  const scaleY = (y) => height - padding - (y / maxY) * (height - 2 * padding);
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+  const minY = Math.min(...allY);
+  const maxY = Math.max(...allY);
+
+  const rangeX = maxX - minX > 0 ? maxX - minX : 1.0;
+  const rangeY = maxY - minY > 0 ? maxY - minY : 1.0;
+
+  const scaleX = (x) => padding + ((x - minX) / rangeX) * (width - 2 * padding);
+  const scaleY = (y) => height - padding - ((y - minY) / rangeY) * (height - 2 * padding);
 
   // Normalize routes
   let routeList = [];
@@ -84,7 +97,7 @@ export default function RouteVisualizer({ instance, routes }) {
     setIsPlaying(true);
   };
 
-  // Helper to interpolate position along route sequence for progress value [0 - 1]
+  // Interpolate vehicle position along route sequence for progress value [0 - 1]
   const calculateVehiclePosition = (routeNodes) => {
     if (!routeNodes || routeNodes.length < 2) return null;
 
@@ -107,10 +120,9 @@ export default function RouteVisualizer({ instance, routes }) {
     const currX = x1 + (x2 - x1) * segProgress;
     const currY = y1 + (y2 - y1) * segProgress;
 
-    // Angle of motion
     const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-    const isAtDepot = toNode.id === instance.depotIdx;
+    const isAtDepot = toNode.id === (instance.depotIdx ?? 0);
     const statusText = isAtDepot
       ? `Returning to Depot (0)`
       : `Customer ${toNode.id}`;
@@ -129,7 +141,7 @@ export default function RouteVisualizer({ instance, routes }) {
   // Generate SVG path string with curve displacement
   const createRoutePathD = (routeNodes, vIdx) => {
     if (!routeNodes || routeNodes.length < 2) return '';
-    const curveOffset = (vIdx - (routeList.length - 1) / 2) * 18;
+    const curveOffset = (vIdx - (routeList.length - 1) / 2) * 12;
 
     const coords = routeNodes
       .map((idx) => {
@@ -241,7 +253,7 @@ export default function RouteVisualizer({ instance, routes }) {
         )}
       </div>
 
-      {/* Spacious 620px Route Canvas Wrapper */}
+      {/* 620px Route Canvas Wrapper */}
       <div className="visualizer-canvas-wrapper">
         <svg
           width="100%"
@@ -257,27 +269,17 @@ export default function RouteVisualizer({ instance, routes }) {
             </filter>
           </defs>
 
-          {/* Grid Background Lines */}
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => (
-            <g key={val}>
-              <line
-                x1={scaleX(val)}
-                y1={padding - 30}
-                x2={scaleX(val)}
-                y2={height - padding + 30}
-                stroke="rgba(255,255,255,0.035)"
-                strokeDasharray="4 4"
-              />
-              <line
-                x1={padding - 30}
-                y1={scaleY(val)}
-                x2={width - padding + 30}
-                y2={scaleY(val)}
-                stroke="rgba(255,255,255,0.035)"
-                strokeDasharray="4 4"
-              />
-            </g>
-          ))}
+          {/* Grid Background */}
+          {[0, 0.25, 0.5, 0.75, 1.0].map((ratio, i) => {
+            const gx = padding + ratio * (width - 2 * padding);
+            const gy = padding + ratio * (height - 2 * padding);
+            return (
+              <g key={i}>
+                <line x1={gx} y1={padding - 20} x2={gx} y2={height - padding + 20} stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+                <line x1={padding - 20} y1={gy} x2={width - padding + 20} y2={gy} stroke="rgba(255,255,255,0.03)" strokeDasharray="4 4" />
+              </g>
+            );
+          })}
 
           {/* Render Vehicle Route Lines */}
           {activeRoutes.map((r, idx) => {
@@ -292,11 +294,26 @@ export default function RouteVisualizer({ instance, routes }) {
                 d={pathD}
                 fill="none"
                 stroke={style.stroke}
-                strokeWidth="2.8"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 filter="url(#glowEffect)"
               />
+            );
+          })}
+
+          {/* Render Informational Charging Stations if present */}
+          {chargingStations.map((st) => {
+            const cx = scaleX(st.x);
+            const cy = scaleY(st.y);
+            return (
+              <g key={`st-${st.id}`} transform={`translate(${cx}, ${cy})`}>
+                <rect x="-10" y="-10" width="20" height="20" rx="4" fill="rgba(16, 185, 129, 0.25)" stroke="#10b981" strokeWidth="1.8" />
+                <circle r="3" fill="#34d399" />
+                <text x="0" y="22" textAnchor="middle" fill="#34d399" fontSize="10" fontWeight="700">
+                  S{st.id}
+                </text>
+              </g>
             );
           })}
 
@@ -313,10 +330,10 @@ export default function RouteVisualizer({ instance, routes }) {
                 key={`dest-${rIdx}`}
                 cx={tx}
                 cy={ty}
-                r="18"
+                r="16"
                 fill="none"
                 stroke="#38bdf8"
-                strokeWidth="2.5"
+                strokeWidth="2"
                 strokeDasharray="4 2"
               />
             );
@@ -331,62 +348,53 @@ export default function RouteVisualizer({ instance, routes }) {
 
             return (
               <g key={`ev-${rIdx}`} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.angle})`}>
-                {/* Glow Aura */}
-                <circle r="16" fill={style.glow} />
-
-                {/* Car Marker Body */}
-                <rect x="-12" y="-7" width="24" height="14" rx="4" fill={style.stroke} stroke="#fff" strokeWidth="1.8" />
-                <circle cx="-6" cy="-7" r="2.5" fill="#fff" />
-                <circle cx="6" cy="-7" r="2.5" fill="#fff" />
-                <circle cx="-6" cy="7" r="2.5" fill="#fff" />
-                <circle cx="6" cy="7" r="2.5" fill="#fff" />
+                <circle r="14" fill={style.glow} />
+                <rect x="-10" y="-6" width="20" height="12" rx="3" fill={style.stroke} stroke="#fff" strokeWidth="1.5" />
+                <circle cx="-5" cy="-6" r="2" fill="#fff" />
+                <circle cx="5" cy="-6" r="2" fill="#fff" />
+                <circle cx="-5" cy="6" r="2" fill="#fff" />
+                <circle cx="5" cy="6" r="2" fill="#fff" />
               </g>
             );
           })}
 
           {/* Render Depot & Customer Nodes */}
           {nodes.map((node) => {
-            const isDepot = node.id === instance.depotIdx;
+            const isDepot = node.id === (instance.depotIdx ?? 0);
             const cx = scaleX(node.x);
             const cy = scaleY(node.y);
 
-            // Smart label offset positioning based on node position quadrant
-            const labelOffsetY = cy > height / 2 ? 30 : -22;
-            const coordOffsetY = cy > height / 2 ? 42 : -34;
+            const labelOffsetY = cy > height / 2 ? 26 : -18;
+            const coordOffsetY = cy > height / 2 ? 38 : -30;
 
             return (
               <g key={node.id} transform={`translate(${cx}, ${cy})`}>
-                {/* Node Outer Ring */}
                 <circle
-                  r={isDepot ? 18 : 13}
+                  r={isDepot ? 16 : 11}
                   fill={isDepot ? 'rgba(245, 158, 11, 0.3)' : 'rgba(6, 182, 212, 0.22)'}
                   stroke={isDepot ? '#f59e0b' : '#06b6d4'}
-                  strokeWidth="2.2"
+                  strokeWidth="2.0"
                 />
+                <circle r={isDepot ? 7 : 5} fill={isDepot ? '#fbbf24' : '#38bdf8'} />
 
-                {/* Node Inner Core */}
-                <circle r={isDepot ? 8 : 6} fill={isDepot ? '#fbbf24' : '#38bdf8'} />
-
-                {/* Node ID & Demand Label */}
                 <text
                   x="0"
                   y={labelOffsetY}
                   textAnchor="middle"
                   fill={isDepot ? '#fbbf24' : '#f8fafc'}
-                  fontSize="12"
+                  fontSize="11"
                   fontWeight="700"
                   fontFamily="Outfit, sans-serif"
                 >
                   {isDepot ? `Depot (0)` : `C${node.id} (${node.demand}u)`}
                 </text>
 
-                {/* Coordinates Label */}
                 <text
                   x="0"
                   y={coordOffsetY}
                   textAnchor="middle"
-                  fill="rgba(255,255,255,0.5)"
-                  fontSize="9.5"
+                  fill="rgba(255,255,255,0.45)"
+                  fontSize="8.5"
                   fontFamily="Fira Code, monospace"
                 >
                   ({node.x.toFixed(1)}, {node.y.toFixed(1)})
@@ -409,7 +417,7 @@ export default function RouteVisualizer({ instance, routes }) {
           }}
         >
           <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#f8fafc', marginBottom: '0.5rem', fontFamily: 'var(--font-heading)' }}>
-            Vehicle Route Legend & Active Navigation Status
+            Vehicle Route Legend & Navigation Status
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {routeList.map((r, rIdx) => {

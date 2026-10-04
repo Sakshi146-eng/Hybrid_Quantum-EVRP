@@ -12,9 +12,11 @@ import tests.test_setup as ts
 import tests.test_vrp as tv
 import tests.test_classical_base as tcb
 import tests.test_genetic_algorithm as tga
+import tests.test_e_cvrp_loader as tbl
+import tests.test_backend_api as tapi
 
 if __name__ == "__main__":
-    print("Running VRP Foundation, Classical Baseline, and Genetic Algorithm unit tests...")
+    print("Running VRP Foundation, Classical Baseline, GA, Benchmark Dataset, and FastAPI tests...")
 
     test_functions = [
         # Setup tests (6)
@@ -49,6 +51,20 @@ if __name__ == "__main__":
         tga.test_ga_total_distance_validity,
         tga.test_ga_seed_reproducibility,
         tga.test_ga_on_toy_instances,
+        # CEC-2020 E-CVRP Benchmark Dataset Loader & GA Integration tests (8)
+        tbl.test_benchmark_loader_valid_instance_loads,
+        tbl.test_benchmark_depot_identification,
+        tbl.test_benchmark_customer_count,
+        tbl.test_benchmark_vehicle_count_and_capacity,
+        tbl.test_benchmark_demands_and_coords_parsing,
+        tbl.test_benchmark_instance_vrp_validation,
+        tbl.test_benchmark_ga_execution_and_vrp_solution,
+        tbl.test_benchmark_result_recording,
+        # FastAPI Backend API tests (4)
+        tapi.test_api_health,
+        tapi.test_api_benchmark_instances_list,
+        tapi.test_api_benchmark_instance_details,
+        tapi.test_api_benchmark_ga_execution,
     ]
 
     passed = 0

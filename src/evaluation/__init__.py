@@ -1,7 +1,7 @@
 """
-Evaluation, metrics calculation, and benchmarking package (Phase 3).
+Evaluation, metrics calculation, and benchmarking package.
 """
 from src.evaluation.metrics import EvaluationMetrics
-from src.evaluation.benchmark import BenchmarkRunner
+from src.evaluation.benchmark import BenchmarkRunner, BenchmarkResult, record_benchmark_result
 
-__all__ = ["EvaluationMetrics", "BenchmarkRunner"]
+__all__ = ["EvaluationMetrics", "BenchmarkRunner", "BenchmarkResult", "record_benchmark_result"]
