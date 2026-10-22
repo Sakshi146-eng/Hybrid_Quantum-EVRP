@@ -1,0 +1,339 @@
+{
+  "instance_name": "E-n29-k4-s7.evrp",
+  "customer_count": 3,
+  "charging_station_count": 4,
+  "battery_capacity": 100.0,
+  "energy_consumption_rate": 0.2,
+  "vehicle_capacity": 6000.0,
+  "num_vehicles_allowed": 4,
+  "seed": 42,
+  "results": {
+    "ga": {
+      "algorithm_name": "EV-Aware Classical GA",
+      "feasible": true,
+      "total_cost": 215.9933,
+      "total_distance": 157.8149,
+      "total_energy_kwh": 32.7138,
+      "charging_cost_usd": 8.1784,
+      "charging_stops": 0,
+      "num_vehicles_used": 1,
+      "runtime_seconds": 0.178163,
+      "routes": [
+        [
+          0,
+          2,
+          3,
+          1,
+          0
+        ]
+      ],
+      "violations": [],
+      "route_traces": [
+        [
+          {
+            "step": 0,
+            "from_node": 0,
+            "to_node": 2,
+            "distance": 9.8489,
+            "travel_time_hours": 0.2462,
+            "energy_consumed_kwh": 2.239,
+            "battery_before_kwh": 100.0,
+            "battery_after_travel_kwh": 97.761,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 97.761,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 2000.0,
+            "battery_violation": false
+          },
+          {
+            "step": 1,
+            "from_node": 2,
+            "to_node": 3,
+            "distance": 26.4197,
+            "travel_time_hours": 0.6605,
+            "energy_consumed_kwh": 5.6362,
+            "battery_before_kwh": 97.761,
+            "battery_after_travel_kwh": 92.1248,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 92.1248,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 1100.0,
+            "battery_violation": false
+          },
+          {
+            "step": 2,
+            "from_node": 3,
+            "to_node": 1,
+            "distance": 72.1803,
+            "travel_time_hours": 1.8045,
+            "energy_consumed_kwh": 14.9654,
+            "battery_before_kwh": 92.1248,
+            "battery_after_travel_kwh": 77.1594,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 77.1594,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 0.0,
+            "battery_violation": false
+          },
+          {
+            "step": 3,
+            "from_node": 1,
+            "to_node": 0,
+            "distance": 49.366,
+            "travel_time_hours": 1.2341,
+            "energy_consumed_kwh": 9.8732,
+            "battery_before_kwh": 77.1594,
+            "battery_after_travel_kwh": 67.2862,
+            "energy_charged_kwh": 32.7138,
+            "battery_after_charge_kwh": 100.0,
+            "charging_time_hours": 0.6543,
+            "charging_cost_usd": 8.1784,
+            "current_load": 0.0,
+            "battery_violation": false
+          }
+        ]
+      ],
+      "timing_breakdown": {},
+      "improvement_over_ga_percent": 0.0,
+      "improvement_over_rl_percent": 0.0
+    },
+    "rl": {
+      "algorithm_name": "Reinforcement Learning (RL)",
+      "feasible": true,
+      "total_cost": 215.9933,
+      "total_distance": 157.8149,
+      "total_energy_kwh": 32.7138,
+      "charging_cost_usd": 8.1784,
+      "charging_stops": 0,
+      "num_vehicles_used": 1,
+      "runtime_seconds": 0.019575,
+      "routes": [
+        [
+          0,
+          2,
+          3,
+          1,
+          0
+        ]
+      ],
+      "violations": [],
+      "route_traces": [
+        [
+          {
+            "step": 0,
+            "from_node": 0,
+            "to_node": 2,
+            "distance": 9.8489,
+            "travel_time_hours": 0.2462,
+            "energy_consumed_kwh": 2.239,
+            "battery_before_kwh": 100.0,
+            "battery_after_travel_kwh": 97.761,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 97.761,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 2000.0,
+            "battery_violation": false
+          },
+          {
+            "step": 1,
+            "from_node": 2,
+            "to_node": 3,
+            "distance": 26.4197,
+            "travel_time_hours": 0.6605,
+            "energy_consumed_kwh": 5.6362,
+            "battery_before_kwh": 97.761,
+            "battery_after_travel_kwh": 92.1248,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 92.1248,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 1100.0,
+            "battery_violation": false
+          },
+          {
+            "step": 2,
+            "from_node": 3,
+            "to_node": 1,
+            "distance": 72.1803,
+            "travel_time_hours": 1.8045,
+            "energy_consumed_kwh": 14.9654,
+            "battery_before_kwh": 92.1248,
+            "battery_after_travel_kwh": 77.1594,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 77.1594,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 0.0,
+            "battery_violation": false
+          },
+          {
+            "step": 3,
+            "from_node": 1,
+            "to_node": 0,
+            "distance": 49.366,
+            "travel_time_hours": 1.2341,
+            "energy_consumed_kwh": 9.8732,
+            "battery_before_kwh": 77.1594,
+            "battery_after_travel_kwh": 67.2862,
+            "energy_charged_kwh": 32.7138,
+            "battery_after_charge_kwh": 100.0,
+            "charging_time_hours": 0.6543,
+            "charging_cost_usd": 8.1784,
+            "current_load": 0.0,
+            "battery_violation": false
+          }
+        ]
+      ],
+      "timing_breakdown": {},
+      "improvement_over_ga_percent": 0.0,
+      "improvement_over_rl_percent": 0.0
+    },
+    "rl_ls": {
+      "algorithm_name": "RL + Classical Local Search",
+      "feasible": true,
+      "total_cost": 215.9933,
+      "total_distance": 157.8149,
+      "total_energy_kwh": 32.7138,
+      "charging_cost_usd": 8.1784,
+      "charging_stops": 0,
+      "num_vehicles_used": 1,
+      "runtime_seconds": 0.03315,
+      "routes": [
+        [
+          0,
+          2,
+          3,
+          1,
+          0
+        ]
+      ],
+      "violations": [],
+      "route_traces": [
+        [
+          {
+            "step": 0,
+            "from_node": 0,
+            "to_node": 2,
+            "distance": 9.8489,
+            "travel_time_hours": 0.2462,
+            "energy_consumed_kwh": 2.239,
+            "battery_before_kwh": 100.0,
+            "battery_after_travel_kwh": 97.761,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 97.761,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 2000.0,
+            "battery_violation": false
+          },
+          {
+            "step": 1,
+            "from_node": 2,
+            "to_node": 3,
+            "distance": 26.4197,
+            "travel_time_hours": 0.6605,
+            "energy_consumed_kwh": 5.6362,
+            "battery_before_kwh": 97.761,
+            "battery_after_travel_kwh": 92.1248,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 92.1248,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 1100.0,
+            "battery_violation": false
+          },
+          {
+            "step": 2,
+            "from_node": 3,
+            "to_node": 1,
+            "distance": 72.1803,
+            "travel_time_hours": 1.8045,
+            "energy_consumed_kwh": 14.9654,
+            "battery_before_kwh": 92.1248,
+            "battery_after_travel_kwh": 77.1594,
+            "energy_charged_kwh": 0.0,
+            "battery_after_charge_kwh": 77.1594,
+            "charging_time_hours": 0.0,
+            "charging_cost_usd": 0.0,
+            "current_load": 0.0,
+            "battery_violation": false
+          },
+          {
+            "step": 3,
+            "from_node": 1,
+            "to_node": 0,
+            "distance": 49.366,
+            "travel_time_hours": 1.2341,
+            "energy_consumed_kwh": 9.8732,
+            "battery_before_kwh": 77.1594,
+            "battery_after_travel_kwh": 67.2862,
+            "energy_charged_kwh": 32.7138,
+            "battery_after_charge_kwh": 100.0,
+            "charging_time_hours": 0.6543,
+            "charging_cost_usd": 8.1784,
+            "current_load": 0.0,
+            "battery_violation": false
+          }
+        ]
+      ],
+      "timing_breakdown": {
+        "rl_seconds": 0.03145,
+        "local_search_seconds": 0.001611,
+        "total_seconds": 0.033063
+      },
+      "improvement_over_ga_percent": 0.0,
+      "improvement_over_rl_percent": 0.0
+    }
+  },
+  "depot": {
+    "id": 0,
+    "x": 145.0,
+    "y": 215.0
+  },
+  "customers": [
+    {
+      "id": 1,
+      "x": 151.0,
+      "y": 264.0,
+      "demand": 1100.0
+    },
+    {
+      "id": 2,
+      "x": 141.0,
+      "y": 206.0,
+      "demand": 2100.0
+    },
+    {
+      "id": 3,
+      "x": 164.0,
+      "y": 193.0,
+      "demand": 900.0
+    }
+  ],
+  "charging_stations": [
+    {
+      "id": 4,
+      "x": 130.0,
+      "y": 225.0
+    },
+    {
+      "id": 5,
+      "x": 136.0,
+      "y": 189.0
+    },
+    {
+      "id": 6,
+      "x": 136.0,
+      "y": 248.0
+    },
+    {
+      "id": 7,
+      "x": 152.0,
+      "y": 208.0
+    }
+  ]
+}

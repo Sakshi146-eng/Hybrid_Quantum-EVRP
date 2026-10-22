@@ -7,6 +7,7 @@ from backend.main import (
     get_benchmark_instance_details,
     run_benchmark_ga,
     GARequest,
+    get_validated_scalability,
 )
 
 

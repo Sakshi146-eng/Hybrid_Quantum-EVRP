@@ -45,10 +45,15 @@ ENV/
 .coverage
 htmlcov/
 
-# Output directories & raw data cache (keep .gitkeep)
-data/raw/*
-!data/raw/.gitkeep
+# Frontend build & dependencies
+frontend/node_modules/
+frontend/dist/
+
+# Processed data cache (keep .gitkeep)
 data/processed/*
 !data/processed/.gitkeep
-results/*
-!results/.gitkeep
+
+# Temporary / log files
+*.log
+*.tmp
+

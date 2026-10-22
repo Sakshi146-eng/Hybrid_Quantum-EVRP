@@ -35,12 +35,16 @@ import {
   getBenchmarkInstances,
   getBenchmarkInstance,
   runBenchmarkGA,
+  runBenchmarkQAOA,
+  runBenchmarkCompare,
   checkBackendHealth,
 } from './utils/backendApi';
 import RouteVisualizer from './components/RouteVisualizer';
+import EVRPDashboard from './components/EVRPDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 
 export default function App() {
-  // Mode Selector State: 'demo' (Interactive Demo) vs 'benchmark' (CEC-2020 Benchmark)
+  // Mode Selector State: 'demo' (Interactive Demo) vs 'benchmark' (CEC-2020 Benchmark) vs 'quantum' (Quantum-Classical Comparison)
   const [dataSourceMode, setDataSourceMode] = useState('demo');
 
   // --- DEMO MODE STATES ---
@@ -66,6 +70,19 @@ export default function App() {
   const [gaCrossoverRate, setGaCrossoverRate] = useState(0.85);
   const [gaMutationRate, setGaMutationRate] = useState(0.25);
   const [gaSeed, setGaSeed] = useState(42);
+
+  // --- QUANTUM VS CLASSICAL COMPARISON STATES ---
+  const [compareCustomerCount, setCompareCustomerCount] = useState(4);
+  const [qaoaDepth, setQaoaDepth] = useState(2);
+  const [qaoaShots, setQaoaShots] = useState(1024);
+  const [qaoaMaxIter, setQaoaMaxIter] = useState(35);
+  const [compareSeed, setCompareSeed] = useState(42);
+  const [compareGaPopSize, setCompareGaPopSize] = useState(50);
+  const [compareGaGenerations, setCompareGaGenerations] = useState(100);
+  const [hybridIterations, setHybridIterations] = useState(3);
+  const [comparisonResult, setComparisonResult] = useState(null);
+  const [activeCompareView, setActiveCompareView] = useState('hybrid');
+  const [isComparing, setIsComparing] = useState(false);
 
   // Solution & Toast State
   const [instance, setInstance] = useState(null);
@@ -174,7 +191,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (dataSourceMode === 'benchmark') {
+    if (dataSourceMode === 'benchmark' || dataSourceMode === 'quantum') {
       loadBenchmarkDiscovery();
     }
   }, [dataSourceMode]);
@@ -184,6 +201,69 @@ export default function App() {
     setSelectedInstanceName(name);
     await fetchAndSetBenchmarkDetails(name);
   };
+
+  const handleRunComparison = async () => {
+    setIsComparing(true);
+    setBackendError(null);
+
+    try {
+      if (!selectedInstanceName) {
+        throw new Error('Please select a valid benchmark instance.');
+      }
+
+      const compData = await runBenchmarkCompare(
+        selectedInstanceName,
+        parseInt(compareCustomerCount, 10) || 4,
+        {
+          p_depth: parseInt(qaoaDepth, 10) || 2,
+          shots: parseInt(qaoaShots, 10) || 1024,
+          max_iter: parseInt(qaoaMaxIter, 10) || 35,
+          ga_population_size: parseInt(compareGaPopSize, 10) || 50,
+          ga_generations: parseInt(compareGaGenerations, 10) || 100,
+          hybrid_iterations: parseInt(hybridIterations, 10) || 3,
+          seed: parseInt(compareSeed, 10) || 42,
+        }
+      );
+
+      setComparisonResult(compData);
+      showToast(
+        `Comparison completed! Exact: ${compData.exact_baseline.total_distance.toFixed(2)} | GA: ${compData.classical_ga.total_distance.toFixed(2)} | Hybrid: ${compData.hybrid_ga_qaoa.total_distance.toFixed(2)}`,
+        'success'
+      );
+    } catch (err) {
+      setBackendError(err.message);
+      showToast(err.message, 'error');
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
+  // Sub-instance format for RouteVisualizer during comparison view
+  const subInstanceForVisualizer = comparisonResult ? {
+    nodes: [
+      { id: 0, type: 'Depot', x: comparisonResult.visualization_nodes.depot.x, y: comparisonResult.visualization_nodes.depot.y, demand: 0 },
+      ...comparisonResult.visualization_nodes.customers.map((c) => ({
+        id: c.id,
+        type: `Cust ${c.id}`,
+        x: c.x,
+        y: c.y,
+        demand: c.demand,
+      })),
+    ],
+    charging_stations: [],
+  } : null;
+
+  const routesForVisualizer = comparisonResult ? (
+    activeCompareView === 'exact'
+      ? comparisonResult.exact_baseline?.routes || []
+      : activeCompareView === 'ga'
+      ? comparisonResult.classical_ga?.routes || []
+      : activeCompareView === 'ga_ls'
+      ? comparisonResult.ga_local_search?.routes || []
+      : activeCompareView === 'qaoa'
+      ? comparisonResult.qaoa_simulator?.routes || []
+      : comparisonResult.hybrid_ga_qaoa?.routes || []
+  ) : [];
 
   // Demo customer table cell editing
   const handleCustomerChange = (index, field, value) => {
@@ -331,7 +411,7 @@ export default function App() {
             padding: '0.6rem 1rem',
             borderRadius: '1rem',
             border: '1px solid rgba(255,255,255,0.08)',
-            maxWidth: '520px',
+            maxWidth: '820px',
             margin: '0 auto',
           }}
         >
@@ -376,17 +456,715 @@ export default function App() {
             }}
             onClick={() => setDataSourceMode('benchmark')}
           >
-            <Database size={18} /> CEC-2020 Benchmark
+            <Database size={18} /> CEC-2020 Benchmark (GA)
+          </button>
+
+          <button
+            style={{
+              flex: 1,
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              background: dataSourceMode === 'quantum' ? 'var(--primary-cyan)' : 'transparent',
+              color: dataSourceMode === 'quantum' ? '#0f172a' : 'var(--text-muted)',
+              transition: 'all 0.2s ease',
+            }}
+            onClick={() => setDataSourceMode('quantum')}
+          >
+            <Cpu size={18} /> Quantum vs Classical (QAOA vs GA)
+          </button>
+
+          <button
+            style={{
+              flex: 1,
+              padding: '0.65rem 1.25rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              background: dataSourceMode === 'evrp' ? 'var(--primary-cyan)' : 'transparent',
+              color: dataSourceMode === 'evrp' ? '#0f172a' : 'var(--text-muted)',
+              transition: 'all 0.2s ease',
+            }}
+            onClick={() => setDataSourceMode('evrp')}
+          >
+            <Zap size={18} /> Quantum-Assisted EVRP (RL + QAOA)
           </button>
         </div>
       </section>
 
-      {/* 3. VRP SIMULATOR CONTROLS & INSTANCE BUILDER */}
-      <section className="section">
-        <h3 className="section-title">
-          <Cpu className="section-title-icon" size={24} />
-          {dataSourceMode === 'benchmark' ? 'CEC-2020 Benchmark GA Solver' : 'VRP Simulator & Instance Configuration'}
-        </h3>
+      {/* 3. VRP SIMULATOR, QUANTUM COMPARISON, OR EVRP DASHBOARD */}
+      {dataSourceMode === 'evrp' ? (
+        <ErrorBoundary>
+          <EVRPDashboard />
+        </ErrorBoundary>
+      ) : dataSourceMode === 'quantum' ? (
+        <section className="section">
+          <h3 className="section-title">
+            <Cpu className="section-title-icon" size={24} />
+            Quantum-Classical Hybrid Optimization & Benchmark Comparison
+          </h3>
+
+          {/* Backend Error Banner */}
+          {backendError && (
+            <div
+              style={{
+                marginBottom: '1.5rem',
+                padding: '1rem 1.25rem',
+                background: 'rgba(244,63,94,0.12)',
+                border: '1px solid #f43f5e',
+                borderRadius: '0.75rem',
+                color: '#fb7185',
+                fontSize: '0.9rem',
+                lineHeight: '1.5',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+              }}
+            >
+              <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <strong style={{ display: 'block', marginBottom: '0.2rem' }}>Backend Connection Error</strong>
+                {backendError}
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
+                    onClick={loadBenchmarkDiscovery}
+                  >
+                    <RefreshCw size={14} /> Retry Connection
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="demo-container">
+            {/* Left Control Panel */}
+            <div className="control-panel">
+              <h4
+                style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: '1.1rem',
+                  marginBottom: '1.25rem',
+                  color: '#f8fafc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Server size={18} color="var(--primary-cyan)" /> Experiment Configuration
+              </h4>
+
+              {/* Benchmark Dropdown Selector */}
+              <div className="form-group">
+                <label className="form-label">Select CEC-2020 Benchmark Instance</label>
+                <select
+                  className="form-select"
+                  value={selectedInstanceName}
+                  onChange={handleBenchmarkSelect}
+                  disabled={isFetchingBenchmark || benchmarkInstances.length === 0}
+                >
+                  {benchmarkInstances.map((inst) => (
+                    <option key={inst.name} value={inst.name}>
+                      {inst.name} ({inst.customers} cust, {inst.vehicles} veh, Q={inst.vehicle_capacity})
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.35rem' }}>
+                  Discovered from <code style={{ color: 'var(--primary-cyan)' }}>data/raw/e_cvrp/</code>
+                </span>
+              </div>
+
+              {/* Sub-instance Customer Subset Selector */}
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label">Sub-instance Customer Count</label>
+                  <strong style={{ color: 'var(--primary-cyan)', fontSize: '0.9rem' }}>
+                    {compareCustomerCount} Customers ({compareCustomerCount * compareCustomerCount} Qubits)
+                  </strong>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.35rem' }}>
+                  {[2, 3, 4].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.5rem',
+                        border: compareCustomerCount === count ? '1px solid var(--primary-cyan)' : '1px solid rgba(255,255,255,0.1)',
+                        background: compareCustomerCount === count ? 'rgba(6, 182, 212, 0.15)' : '#0f172a',
+                        color: compareCustomerCount === count ? 'var(--primary-cyan)' : 'var(--text-muted)',
+                        fontWeight: '700',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => setCompareCustomerCount(count)}
+                    >
+                      {count} Cust ({count * count}Q)
+                    </button>
+                  ))}
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginTop: '0.4rem', lineHeight: '1.4' }}>
+                  Position-based QUBO encoding requires N = C² qubits. Constrained to ≤ 4 customers (16 qubits) for stable classical simulation.
+                </span>
+              </div>
+
+              {/* QAOA Hyperparameters */}
+              <div
+                style={{
+                  background: '#0f172a',
+                  padding: '1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.75rem',
+                    fontSize: '0.85rem',
+                    color: 'var(--primary-cyan)',
+                    fontWeight: '600',
+                  }}
+                >
+                  <Cpu size={16} /> QAOA Simulator Hyperparameters
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Depth (p-layers)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={qaoaDepth}
+                      onChange={(e) => setQaoaDepth(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Aer Shots</label>
+                    <input
+                      type="number"
+                      step="256"
+                      min="100"
+                      max="8192"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={qaoaShots}
+                      onChange={(e) => setQaoaShots(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>COBYLA Max Iter</label>
+                    <input
+                      type="number"
+                      min="10"
+                      max="200"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={qaoaMaxIter}
+                      onChange={(e) => setQaoaMaxIter(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Random Seed</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={compareSeed}
+                      onChange={(e) => setCompareSeed(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* GA Hyperparameters */}
+              <div
+                style={{
+                  background: '#0f172a',
+                  padding: '1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  marginBottom: '1.25rem',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.75rem',
+                    fontSize: '0.85rem',
+                    color: '#a78bfa',
+                    fontWeight: '600',
+                  }}
+                >
+                  <Sliders size={16} /> Classical GA Baseline Settings
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>GA Pop Size</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={compareGaPopSize}
+                      onChange={(e) => setCompareGaPopSize(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>GA Generations</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }}
+                      value={compareGaGenerations}
+                      onChange={(e) => setCompareGaGenerations(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  opacity: isComparing ? 0.6 : 1.0,
+                  cursor: isComparing ? 'not-allowed' : 'pointer',
+                }}
+                onClick={handleRunComparison}
+                disabled={isComparing}
+              >
+                <Play size={18} /> {isComparing ? 'Running Quantum & Classical Solvers...' : 'Run Quantum vs Classical Comparison'}
+              </button>
+            </div>
+
+            {/* Right Display Panel */}
+            <div className="display-panel">
+              {/* Scientific Transparency & Limitations Notice */}
+              <div
+                style={{
+                  background: 'rgba(99, 102, 241, 0.08)',
+                  border: '1px solid rgba(99, 102, 241, 0.25)',
+                  borderRadius: '0.75rem',
+                  padding: '1rem 1.25rem',
+                  marginBottom: '1.25rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a5b4fc', fontWeight: '700', fontSize: '0.875rem', marginBottom: '0.35rem' }}>
+                  <Zap size={16} /> Scientific Transparency & Simulation Model
+                </div>
+                <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                  <strong style={{ color: '#f1f5f9' }}>Simulated QAOA:</strong> Executed using Qiskit Aer statevector simulation on classical CPU. No physical quantum processor was used; no quantum supremacy or speedup is claimed.
+                </div>
+                <div style={{ fontSize: '0.825rem', color: '#fbbf24', marginTop: '0.35rem', lineHeight: '1.5' }}>
+                  <strong>Research Scope:</strong> Evaluates single-vehicle routing on identical customer subsets. EV battery capacity, energy depletion, and charging-station visits are excluded in this Phase 1 comparison.
+                </div>
+              </div>
+
+              {comparisonResult ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                    {/* Card 1: Exact Brute Force */}
+                    <div
+                      style={{
+                        background: '#0f172a',
+                        padding: '1rem',
+                        borderRadius: '0.75rem',
+                        border: '1px solid rgba(16, 185, 129, 0.35)',
+                        position: 'relative',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <CheckCircle2 size={14} /> EXACT BASELINE
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ground Truth Reference</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#34d399', fontFamily: 'var(--font-heading)', margin: '0.35rem 0' }}>
+                        {comparisonResult.exact_baseline.total_distance.toFixed(4)} <span style={{ fontSize: '0.75rem' }}>units</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div>Runtime: <strong style={{ color: '#f8fafc' }}>{comparisonResult.exact_baseline.runtime_seconds.toFixed(6)} s</strong></div>
+                        <div>Feasibility: <strong style={{ color: '#34d399' }}>VALID ✓</strong></div>
+                        <div>Optimality Gap: <strong style={{ color: '#34d399' }}>0.00%</strong></div>
+                        <div>Route: <span className="route-code" style={{ fontSize: '0.7rem' }}>{comparisonResult.exact_baseline.routes[0]?.join(' → ')}</span></div>
+                      </div>
+                    </div>
+
+                    {/* Card 2: Classical GA */}
+                    <div
+                      style={{
+                        background: '#0f172a',
+                        padding: '1rem',
+                        borderRadius: '0.75rem',
+                        border: '1px solid rgba(168, 85, 247, 0.35)',
+                        position: 'relative',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', color: '#a855f7', fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Sliders size={14} /> CLASSICAL GA
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Evolutionary Baseline</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c084fc', fontFamily: 'var(--font-heading)', margin: '0.35rem 0' }}>
+                        {comparisonResult.classical_ga.total_distance.toFixed(4)} <span style={{ fontSize: '0.75rem' }}>units</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div>Runtime: <strong style={{ color: '#f8fafc' }}>{comparisonResult.classical_ga.runtime_seconds.toFixed(6)} s</strong></div>
+                        <div>Feasibility: <strong style={{ color: comparisonResult.classical_ga.feasible ? '#34d399' : '#fb7185' }}>{comparisonResult.classical_ga.feasible ? 'VALID ✓' : 'INFEASIBLE ✗'}</strong></div>
+                        <div>Optimality Gap: <strong style={{ color: comparisonResult.classical_ga.optimality_gap_percent === 0 ? '#34d399' : '#fbbf24' }}>{comparisonResult.classical_ga.optimality_gap_percent !== null ? `${comparisonResult.classical_ga.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</strong></div>
+                        <div>Route: <span className="route-code" style={{ fontSize: '0.7rem' }}>{comparisonResult.classical_ga.routes[0]?.join(' → ')}</span></div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: GA + Local Search */}
+                    <div
+                      style={{
+                        background: '#0f172a',
+                        padding: '1rem',
+                        borderRadius: '0.75rem',
+                        border: '1px solid rgba(59, 130, 246, 0.35)',
+                        position: 'relative',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Activity size={14} /> GA + LOCAL SEARCH
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GA + 2-Opt / Relocate</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#93c5fd', fontFamily: 'var(--font-heading)', margin: '0.35rem 0' }}>
+                        {comparisonResult.ga_local_search ? comparisonResult.ga_local_search.total_distance.toFixed(4) : 'N/A'} <span style={{ fontSize: '0.75rem' }}>units</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div>Runtime: <strong style={{ color: '#f8fafc' }}>{comparisonResult.ga_local_search?.runtime_seconds.toFixed(6)} s</strong></div>
+                        <div>Feasibility: <strong style={{ color: comparisonResult.ga_local_search?.feasible ? '#34d399' : '#fb7185' }}>{comparisonResult.ga_local_search?.feasible ? 'VALID ✓' : 'INFEASIBLE ✗'}</strong></div>
+                        <div>Optimality Gap: <strong style={{ color: comparisonResult.ga_local_search?.optimality_gap_percent === 0 ? '#34d399' : '#fbbf24' }}>{comparisonResult.ga_local_search?.optimality_gap_percent !== null ? `${comparisonResult.ga_local_search.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</strong></div>
+                        <div>vs GA Gain: <strong style={{ color: comparisonResult.ga_local_search?.improvement_over_ga_percent > 0 ? '#34d399' : '#94a3b8' }}>{comparisonResult.ga_local_search?.improvement_over_ga_percent?.toFixed(2)}%</strong></div>
+                      </div>
+                    </div>
+
+                    {/* Card 4: QAOA Simulator */}
+                    <div
+                      style={{
+                        background: '#0f172a',
+                        padding: '1rem',
+                        borderRadius: '0.75rem',
+                        border: '1px solid rgba(6, 182, 212, 0.35)',
+                        position: 'relative',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', color: 'var(--primary-cyan)', fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Cpu size={14} /> QAOA SIMULATOR
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Direct QUBO Simulation</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--primary-cyan)', fontFamily: 'var(--font-heading)', margin: '0.35rem 0' }}>
+                        {comparisonResult.qaoa_simulator?.total_distance !== null ? `${comparisonResult.qaoa_simulator.total_distance.toFixed(4)} units` : 'N/A (>16Q)'}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div>Runtime: <strong style={{ color: '#f8fafc' }}>{comparisonResult.qaoa_simulator?.runtime_seconds.toFixed(6)} s</strong></div>
+                        <div>Feasibility: <strong style={{ color: comparisonResult.qaoa_simulator?.feasible ? '#34d399' : '#fb7185' }}>{comparisonResult.qaoa_simulator?.feasible ? 'VALID ✓' : (comparisonResult.qaoa_simulator?.repair_applied ? 'REPAIRED (Infeasible Raw) ✗' : 'N/A')}</strong></div>
+                        <div>Raw Valid Rate: <strong style={{ color: '#38bdf8' }}>{comparisonResult.qaoa_simulator?.raw_valid_sample_rate_percent ?? comparisonResult.qaoa_simulator?.valid_sample_rate_percent ?? 0}%</strong></div>
+                        <div>Optimality Gap: <strong style={{ color: comparisonResult.qaoa_simulator?.optimality_gap_percent === 0 ? '#34d399' : '#fbbf24' }}>{comparisonResult.qaoa_simulator?.optimality_gap_percent !== null ? `${comparisonResult.qaoa_simulator.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</strong></div>
+                      </div>
+                    </div>
+
+                    {/* Card 5: Hybrid GA-QAOA */}
+                    <div
+                      style={{
+                        background: '#0f172a',
+                        padding: '1rem',
+                        borderRadius: '0.75rem',
+                        border: '1px solid rgba(245, 158, 11, 0.45)',
+                        position: 'relative',
+                        boxShadow: '0 0 15px rgba(245, 158, 11, 0.08)',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: '700', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Sparkles size={14} /> HYBRID GA–QAOA
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Staged Hybrid Optimization</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#fbbf24', fontFamily: 'var(--font-heading)', margin: '0.35rem 0' }}>
+                        {comparisonResult.hybrid_ga_qaoa ? comparisonResult.hybrid_ga_qaoa.total_distance.toFixed(4) : 'N/A'} <span style={{ fontSize: '0.75rem' }}>units</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <div>Runtime: <strong style={{ color: '#f8fafc' }}>{comparisonResult.hybrid_ga_qaoa?.runtime_seconds.toFixed(6)} s</strong></div>
+                        <div>Feasibility: <strong style={{ color: comparisonResult.hybrid_ga_qaoa?.feasible ? '#34d399' : '#fb7185' }}>{comparisonResult.hybrid_ga_qaoa?.feasible ? 'VALID ✓' : 'INFEASIBLE ✗'}</strong></div>
+                        <div>Optimality Gap: <strong style={{ color: comparisonResult.hybrid_ga_qaoa?.optimality_gap_percent === 0 ? '#34d399' : '#fbbf24' }}>{comparisonResult.hybrid_ga_qaoa?.optimality_gap_percent !== null ? `${comparisonResult.hybrid_ga_qaoa.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</strong></div>
+                        <div>vs GA Gain: <strong style={{ color: comparisonResult.hybrid_ga_qaoa?.improvement_over_ga_percent > 0 ? '#34d399' : '#38bdf8' }}>{comparisonResult.hybrid_ga_qaoa?.improvement_over_ga_percent?.toFixed(2)}%</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comprehensive 5-Algorithm Comparison Table */}
+                  <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <h5 style={{ fontFamily: 'var(--font-heading)', fontSize: '0.95rem', color: '#f8fafc', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Grid size={16} color="var(--primary-cyan)" /> Side-by-Side Algorithm Benchmark Matrix
+                      </h5>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Instance: <code style={{ color: '#a5b4fc' }}>{comparisonResult.sub_instance_name}</code>
+                      </span>
+                    </div>
+
+                    <div className="table-scroll-container">
+                      <table className="matrix-table" style={{ fontSize: '0.8rem' }}>
+                        <thead>
+                          <tr>
+                            <th>Algorithm</th>
+                            <th>Best Route Distance</th>
+                            <th>Feasibility</th>
+                            <th>Optimality Gap</th>
+                            <th>Improvement vs GA</th>
+                            <th>QAOA Raw Valid Rate</th>
+                            <th>Total Runtime</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style={{ fontWeight: '700', color: '#34d399' }}>Exact Baseline (Brute-Force)</td>
+                            <td style={{ fontWeight: '700' }}>{comparisonResult.exact_baseline.total_distance.toFixed(4)}</td>
+                            <td><span className="badge badge-complete">VALID ✓</span></td>
+                            <td>0.00%</td>
+                            <td>—</td>
+                            <td>100% (Enumerated)</td>
+                            <td>{comparisonResult.exact_baseline.runtime_seconds.toFixed(6)} s</td>
+                          </tr>
+                          <tr>
+                            <td style={{ fontWeight: '700', color: '#c084fc' }}>Classical GA</td>
+                            <td style={{ fontWeight: '700' }}>{comparisonResult.classical_ga.total_distance.toFixed(4)}</td>
+                            <td>{comparisonResult.classical_ga.feasible ? <span className="badge badge-complete">VALID ✓</span> : <span className="badge badge-invalid">INFEASIBLE ✗</span>}</td>
+                            <td>{comparisonResult.classical_ga.optimality_gap_percent !== null ? `${comparisonResult.classical_ga.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</td>
+                            <td>0.00% (Baseline)</td>
+                            <td>—</td>
+                            <td>{comparisonResult.classical_ga.runtime_seconds.toFixed(6)} s</td>
+                          </tr>
+                          {comparisonResult.ga_local_search && (
+                            <tr>
+                              <td style={{ fontWeight: '700', color: '#93c5fd' }}>GA + Local Search (2-Opt)</td>
+                              <td style={{ fontWeight: '700' }}>{comparisonResult.ga_local_search.total_distance.toFixed(4)}</td>
+                              <td>{comparisonResult.ga_local_search.feasible ? <span className="badge badge-complete">VALID ✓</span> : <span className="badge badge-invalid">INFEASIBLE ✗</span>}</td>
+                              <td>{comparisonResult.ga_local_search.optimality_gap_percent !== null ? `${comparisonResult.ga_local_search.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</td>
+                              <td style={{ color: comparisonResult.ga_local_search.improvement_over_ga_percent > 0 ? '#34d399' : 'inherit', fontWeight: '700' }}>
+                                {comparisonResult.ga_local_search.improvement_over_ga_percent > 0 ? `+${comparisonResult.ga_local_search.improvement_over_ga_percent.toFixed(2)}%` : `${comparisonResult.ga_local_search.improvement_over_ga_percent.toFixed(2)}%`}
+                              </td>
+                              <td>—</td>
+                              <td>{comparisonResult.ga_local_search.runtime_seconds.toFixed(6)} s</td>
+                            </tr>
+                          )}
+                          {comparisonResult.qaoa_simulator && (
+                            <tr>
+                              <td style={{ fontWeight: '700', color: 'var(--primary-cyan)' }}>QAOA Simulator (Direct QUBO)</td>
+                              <td style={{ fontWeight: '700' }}>{comparisonResult.qaoa_simulator.total_distance !== null ? comparisonResult.qaoa_simulator.total_distance.toFixed(4) : 'N/A (>16Q)'}</td>
+                              <td>{comparisonResult.qaoa_simulator.feasible ? <span className="badge badge-complete">VALID ✓</span> : (comparisonResult.qaoa_simulator.repair_applied ? <span style={{ color: '#fbbf24', fontSize: '0.75rem' }}>Repaired (Raw Inv)</span> : <span className="badge badge-invalid">N/A</span>)}</td>
+                              <td>{comparisonResult.qaoa_simulator.optimality_gap_percent !== null ? `${comparisonResult.qaoa_simulator.optimality_gap_percent.toFixed(2)}%` : 'N/A'}</td>
+                              <td>—</td>
+                              <td style={{ color: '#38bdf8', fontWeight: '700' }}>{comparisonResult.qaoa_simulator.raw_valid_sample_rate_percent ?? comparisonResult.qaoa_simulator.valid_sample_rate_percent ?? 0}%</td>
+                              <td>{comparisonResult.qaoa_simulator.runtime_seconds.toFixed(6)} s</td>
+                            </tr>
+                          )}
+                          {comparisonResult.hybrid_ga_qaoa && (
+                            <tr style={{ background: 'rgba(245, 158, 11, 0.08)' }}>
+                              <td style={{ fontWeight: '700', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <Sparkles size={14} /> Hybrid GA–QAOA
+                              </td>
+                              <td style={{ fontWeight: '700', color: '#fbbf24' }}>{comparisonResult.hybrid_ga_qaoa.total_distance.toFixed(4)}</td>
+                              <td>{comparisonResult.hybrid_ga_qaoa.feasible ? <span className="badge badge-complete">VALID ✓</span> : <span className="badge badge-invalid">INFEASIBLE ✗</span>}</td>
+                              <td style={{ fontWeight: '700', color: comparisonResult.hybrid_ga_qaoa.optimality_gap_percent === 0 ? '#34d399' : '#fbbf24' }}>
+                                {comparisonResult.hybrid_ga_qaoa.optimality_gap_percent !== null ? `${comparisonResult.hybrid_ga_qaoa.optimality_gap_percent.toFixed(2)}%` : 'N/A'}
+                              </td>
+                              <td style={{ color: comparisonResult.hybrid_ga_qaoa.improvement_over_ga_percent > 0 ? '#34d399' : '#38bdf8', fontWeight: '700' }}>
+                                {comparisonResult.hybrid_ga_qaoa.improvement_over_ga_percent > 0 ? `+${comparisonResult.hybrid_ga_qaoa.improvement_over_ga_percent.toFixed(2)}%` : `${comparisonResult.hybrid_ga_qaoa.improvement_over_ga_percent.toFixed(2)}%`}
+                              </td>
+                              <td>{comparisonResult.hybrid_ga_qaoa.qaoa_improvements_count} QAOA Subproblem Wins</td>
+                              <td>{comparisonResult.hybrid_ga_qaoa.runtime_seconds.toFixed(6)} s</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Route Visualizer with 5-Way Toggle */}
+                  <div className="visualizer-card" style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', color: '#f8fafc', margin: 0 }}>
+                        Sub-instance Route Visualizer ({comparisonResult.sub_instance_name})
+                      </h4>
+                      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          style={{
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '0.4rem',
+                            border: activeCompareView === 'exact' ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                            background: activeCompareView === 'exact' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                            color: activeCompareView === 'exact' ? '#34d399' : 'var(--text-muted)',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setActiveCompareView('exact')}
+                        >
+                          Exact Route
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '0.4rem',
+                            border: activeCompareView === 'ga' ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
+                            background: activeCompareView === 'ga' ? 'rgba(168, 85, 247, 0.2)' : 'transparent',
+                            color: activeCompareView === 'ga' ? '#c084fc' : 'var(--text-muted)',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setActiveCompareView('ga')}
+                        >
+                          Classical GA
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '0.4rem',
+                            border: activeCompareView === 'ga_ls' ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
+                            background: activeCompareView === 'ga_ls' ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                            color: activeCompareView === 'ga_ls' ? '#93c5fd' : 'var(--text-muted)',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setActiveCompareView('ga_ls')}
+                        >
+                          GA + Local Search
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '0.4rem',
+                            border: activeCompareView === 'qaoa' ? '1px solid var(--primary-cyan)' : '1px solid rgba(255,255,255,0.1)',
+                            background: activeCompareView === 'qaoa' ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+                            color: activeCompareView === 'qaoa' ? 'var(--primary-cyan)' : 'var(--text-muted)',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setActiveCompareView('qaoa')}
+                        >
+                          QAOA Simulator
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '0.4rem',
+                            border: activeCompareView === 'hybrid' ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                            background: activeCompareView === 'hybrid' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                            color: activeCompareView === 'hybrid' ? '#fbbf24' : 'var(--text-muted)',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setActiveCompareView('hybrid')}
+                        >
+                          ★ Hybrid GA–QAOA
+                        </button>
+                      </div>
+                    </div>
+
+                    <RouteVisualizer
+                      instance={subInstanceForVisualizer}
+                      routes={routesForVisualizer}
+                    />
+                  </div>
+
+                  {/* Top Quantum Measurement Bitstrings Table */}
+                  {comparisonResult.qaoa_simulator?.top_candidates && comparisonResult.qaoa_simulator.top_candidates.length > 0 && (
+                    <div style={{ background: '#0f172a', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <h5 style={{ fontFamily: 'var(--font-heading)', fontSize: '0.9rem', color: '#f8fafc', marginBottom: '0.6rem' }}>
+                        Top Sampled Quantum Measurement Bitstrings (Qiskit Aer Simulator)
+                      </h5>
+                      <div className="table-scroll-container" style={{ maxHeight: '200px' }}>
+                        <table className="matrix-table" style={{ fontSize: '0.75rem' }}>
+                          <thead>
+                            <tr>
+                              <th>Bitstring ({comparisonResult.qubits_required}Q)</th>
+                              <th>Counts</th>
+                              <th>Prob</th>
+                              <th>Energy</th>
+                              <th>Decoded Route</th>
+                              <th>Validity</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {comparisonResult.qaoa_simulator.top_candidates.map((c, idx) => (
+                              <tr key={idx}>
+                                <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary-cyan)' }}>{c.bitstring}</td>
+                                <td>{c.count}</td>
+                                <td>{(c.probability * 100).toFixed(1)}%</td>
+                                <td>{c.energy.toFixed(2)}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)' }}>{c.route?.join(' → ')}</td>
+                                <td>
+                                  {c.is_valid ? (
+                                    <span style={{ color: '#34d399', fontWeight: '700' }}>VALID ✓ (Raw Sample)</span>
+                                  ) : (
+                                    <span style={{ color: '#fb7185' }}>INVALID ✗</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ padding: '3rem 1.5rem', textAlign: 'center', color: 'var(--text-muted)', background: '#0f172a', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <Cpu size={32} color="var(--primary-cyan)" style={{ marginBottom: '0.75rem', opacity: 0.8 }} />
+                  <div style={{ fontWeight: '600', color: '#f8fafc', marginBottom: '0.35rem' }}>
+                    No Comparison Executed Yet
+                  </div>
+                  <div style={{ fontSize: '0.85rem' }}>
+                    Configure the sub-instance size (2–4 customers) and click <strong>'Run Quantum vs Classical Comparison'</strong> to evaluate Exact, GA, and QAOA simultaneously.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* 3. VRP SIMULATOR CONTROLS & INSTANCE BUILDER */
+        <section className="section">
+          <h3 className="section-title">
+            <Cpu className="section-title-icon" size={24} />
+            {dataSourceMode === 'benchmark' ? 'CEC-2020 Benchmark GA Solver' : 'VRP Simulator & Instance Configuration'}
+          </h3>
 
         {/* Backend Error Banner */}
         {backendError && (
@@ -900,6 +1678,7 @@ export default function App() {
           </div>
         </div>
       </section>
+    )}
 
       {/* 4. METHODOLOGY PIPELINE */}
       <section className="section">
@@ -913,33 +1692,33 @@ export default function App() {
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
-          <div className="pipeline-step pending">
+          <div className="pipeline-step active">
             <div className="pipeline-step-title">QUBO Formulation</div>
-            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
+            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active Encoding</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
-          <div className="pipeline-step pending">
+          <div className="pipeline-step active">
             <div className="pipeline-step-title">QAOA Optimization</div>
-            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
+            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active Simulator</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
-          <div className="pipeline-step pending">
+          <div className="pipeline-step active">
             <div className="pipeline-step-title">RL Controller</div>
-            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
+            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active Policy</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
-          <div className="pipeline-step pending">
+          <div className="pipeline-step active">
             <div className="pipeline-step-title">EVRP Extension</div>
-            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
+            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active Model</span>
           </div>
           <div className="pipeline-arrow"><ArrowRight size={20} /></div>
 
-          <div className="pipeline-step pending">
+          <div className="pipeline-step active">
             <div className="pipeline-step-title">Evaluation</div>
-            <span className="badge badge-pending"><Clock size={12} /> Under Development</span>
+            <span className="badge badge-complete"><CheckCircle2 size={12} /> Active Comparison</span>
           </div>
         </div>
       </section>
@@ -975,6 +1754,36 @@ export default function App() {
                 <td><span className="badge badge-complete">✅ Complete</span></td>
               </tr>
               <tr>
+                <td><strong>Exact Brute-Force Baseline</strong></td>
+                <td>Exhaustive permutation solver for ground-truth optimality gap calibration</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>QUBO Formulation</strong></td>
+                <td>Lucas position-based binary variable mapping (N = C²) & Ising Hamiltonian translation</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>QAOA Quantum Solver</strong></td>
+                <td>Parameterized quantum circuit, COBYLA classical optimizer & AerSimulator sampling</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>Reinforcement Learning (RL Controller)</strong></td>
+                <td>Gym-compatible Actor-Critic policy with dynamic action masking over physically reachable nodes</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>EVRP Battery & Charging Feasibility</strong></td>
+                <td>Leg-by-leg state-of-charge tracking, non-linear energy dissipation, CS station visits, and charging cost</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
+                <td><strong>Hybrid Optimization Suite (RL + QAOA + EV-LS)</strong></td>
+                <td>Unified multi-algorithm framework comparing Classical GA, Local Search, RL Policy, Quantum QAOA, and Full Hybrid</td>
+                <td><span className="badge badge-complete">✅ Complete</span></td>
+              </tr>
+              <tr>
                 <td><strong>Ant Colony Optimization (ACO)</strong></td>
                 <td>Pheromone matrix update and probabilistic ant route construction</td>
                 <td><span className="badge badge-pending">⏳ Planned</span></td>
@@ -988,26 +1797,6 @@ export default function App() {
                 <td><strong>Tabu Search (TS)</strong></td>
                 <td>Tabu list memory tenure and neighborhood move search</td>
                 <td><span className="badge badge-pending">⏳ Planned</span></td>
-              </tr>
-              <tr>
-                <td><strong>QUBO Formulation</strong></td>
-                <td>Penalty matrices mapping VRP constraints to quadratic terms</td>
-                <td><span className="badge badge-pending">🔄 In Development</span></td>
-              </tr>
-              <tr>
-                <td><strong>QAOA Quantum Solver</strong></td>
-                <td>Parameterized quantum circuit execution on quantum simulators</td>
-                <td><span className="badge badge-pending">🔄 In Development</span></td>
-              </tr>
-              <tr>
-                <td><strong>Reinforcement Learning</strong></td>
-                <td>Policy network optimizing QAOA parameters during quantum sampling</td>
-                <td><span className="badge badge-pending">🔄 In Development</span></td>
-              </tr>
-              <tr>
-                <td><strong>EVRP Extension</strong></td>
-                <td>Battery capacity, energy dissipation, and charging station visits</td>
-                <td><span className="badge badge-pending">🔄 In Development</span></td>
               </tr>
             </tbody>
           </table>

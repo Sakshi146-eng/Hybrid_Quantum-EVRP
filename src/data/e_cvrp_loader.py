@@ -229,3 +229,123 @@ def load_e_cvrp_instance(
     instance.raw_data = raw_data
 
     return instance
+
+
+def load_evrp_instance(
+    file_path: Union[str, Path],
+    customer_count: Optional[int] = None,
+    customer_indices: Optional[List[int]] = None,
+    battery_capacity: Optional[float] = None,
+    energy_consumption_rate: Optional[float] = None,
+    battery_reserve: Optional[float] = None,
+    load_factor: float = 0.2,
+    charging_power: float = 50.0,
+    charging_price: float = 0.25,
+    seed: Optional[int] = 42,
+):
+    """
+    Loads a CEC-2020 E-CVRP benchmark file and converts it into a full EVRPInstance
+    incorporating depot, customers, charging stations, and battery constraints.
+    """
+    from src.evrp.instance import EVRPInstance
+
+    parsed = parse_e_cvrp_file(file_path)
+    node_coords = parsed["node_coords"]
+    raw_demands = parsed["demands"]
+
+    depot_node_id = parsed["depot_nodes"][0] if parsed["depot_nodes"] else 1
+    station_nodes = list(parsed["station_nodes"])
+    station_set = set(station_nodes)
+
+    all_nids = sorted(node_coords.keys())
+    available_customers = [
+        nid for nid in all_nids if nid != depot_node_id and nid not in station_set
+    ]
+
+    # Select customers
+    if customer_indices is not None:
+        selected_customers = [nid for nid in customer_indices if nid in available_customers]
+    elif customer_count is not None and customer_count < len(available_customers):
+        if seed is not None:
+            rng = np.random.RandomState(seed)
+            selected_customers = sorted(
+                rng.choice(available_customers, size=customer_count, replace=False).tolist()
+            )
+        else:
+            selected_customers = available_customers[:customer_count]
+    else:
+        selected_customers = available_customers
+
+    # Select charging stations (up to 4 stations if available)
+    selected_stations = station_nodes[:4] if len(station_nodes) > 4 else station_nodes
+
+    # Construct unified ordered node list: [depot, ...customers, ...stations]
+    ordered_nids = [depot_node_id] + selected_customers + selected_stations
+    c_count = len(selected_customers)
+    s_count = len(selected_stations)
+
+    # Station indices in the unified instance
+    station_indices = list(range(1 + c_count, 1 + c_count + s_count))
+    customer_indices_mapped = list(range(1, 1 + c_count))
+
+    coords_list = [node_coords[nid] for nid in ordered_nids]
+    coordinates = np.array(coords_list, dtype=float)
+
+    demands_list = [float(raw_demands.get(nid, 0.0)) for nid in ordered_nids]
+    demands_list[0] = 0.0  # depot demand = 0
+    for s_idx in station_indices:
+        demands_list[s_idx] = 0.0  # station demand = 0
+    demands = np.array(demands_list, dtype=float)
+
+    distance_matrix = compute_distance_matrix(coordinates, metric="euclidean")
+
+    # Battery capacity and consumption calibration
+    raw_energy_cap = parsed.get("energy_capacity")
+    raw_energy_cons = parsed.get("energy_consumption")
+
+    rate = float(energy_consumption_rate) if energy_consumption_rate is not None else (
+        float(raw_energy_cons) if (raw_energy_cons and float(raw_energy_cons) > 0) else 0.25
+    )
+
+    if battery_capacity is not None:
+        b_cap = float(battery_capacity)
+    elif raw_energy_cap is not None and float(raw_energy_cap) > 0:
+        # Scale benchmark battery capacity proportionally to sub-instance distance scale
+        raw_b = float(raw_energy_cap)
+        b_cap = raw_b
+    else:
+        # Calibrate default battery capacity so single legs are feasible but long tours require charging
+        max_d = float(np.max(distance_matrix))
+        b_cap = max_d * rate * 3.5
+
+    reserve = float(battery_reserve) if battery_reserve is not None else float(0.05 * b_cap)
+
+    num_vehicles = int(parsed["num_vehicles"])
+    vehicle_capacity = float(parsed["vehicle_capacity"])
+
+    instance = EVRPInstance(
+        distance_matrix=distance_matrix,
+        coordinates=coordinates,
+        battery_capacity=b_cap,
+        energy_consumption_rate=rate,
+        charging_stations=station_indices,
+        initial_battery=b_cap,
+        battery_reserve=reserve,
+        load_factor=load_factor,
+        charging_power=charging_power,
+        charging_price_per_kwh=charging_price,
+        num_vehicles=num_vehicles,
+        depot_idx=0,
+        demands=demands,
+        vehicle_capacity=vehicle_capacity,
+        customer_subset=customer_indices_mapped,
+    )
+
+    raw_data = dict(parsed)
+    raw_data["mapped_node_ids"] = ordered_nids
+    raw_data["depot_node_id"] = depot_node_id
+    raw_data["selected_customers_parent_ids"] = selected_customers
+    raw_data["selected_stations_parent_ids"] = selected_stations
+    instance.raw_data = raw_data
+
+    return instance

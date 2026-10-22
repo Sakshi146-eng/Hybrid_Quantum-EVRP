@@ -14,10 +14,43 @@ const ROUTE_STYLES = [
 ];
 
 export default function RouteVisualizer({ instance, routes }) {
-  if (!instance || !instance.nodes || instance.nodes.length === 0) return null;
+  if (!instance || (!instance.nodes && !instance.nodeLookup)) return null;
 
-  const { nodes } = instance;
+  const rawNodes = instance.nodes || [];
   const chargingStations = instance.charging_stations || [];
+
+  // Map nodes by their unique id for safe O(1) lookup
+  const nodeLookup = React.useMemo(() => {
+    const lookup = {};
+    if (instance.nodeLookup && typeof instance.nodeLookup === 'object') {
+      Object.assign(lookup, instance.nodeLookup);
+    }
+    if (Array.isArray(rawNodes)) {
+      rawNodes.forEach((n, idx) => {
+        if (n) {
+          if (n.id !== undefined) lookup[n.id] = n;
+          lookup[idx] = lookup[idx] || n;
+        }
+      });
+    }
+    if (Array.isArray(chargingStations)) {
+      chargingStations.forEach((s) => {
+        if (s && s.id !== undefined) {
+          lookup[s.id] = lookup[s.id] || {
+            id: s.id,
+            x: s.x,
+            y: s.y,
+            type: `Station ${s.id}`,
+            demand: 0,
+            isStation: true,
+          };
+        }
+      });
+    }
+    return lookup;
+  }, [instance, rawNodes, chargingStations]);
+
+  const getNode = (id) => nodeLookup[id] || (rawNodes && rawNodes[id]) || null;
 
   // Animation Control States
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,14 +65,18 @@ export default function RouteVisualizer({ instance, routes }) {
   const height = 650;
   const padding = 70;
 
-  // Compute bounding box across all nodes and charging stations
-  const allX = [...nodes.map((n) => n.x), ...chargingStations.map((s) => s.x)];
-  const allY = [...nodes.map((n) => n.y), ...chargingStations.map((s) => s.y)];
+  // Compute bounding box across all known nodes
+  const allValidNodes = Object.values(nodeLookup).filter(
+    (n) => n && typeof n.x === 'number' && typeof n.y === 'number'
+  );
 
-  const minX = Math.min(...allX);
-  const maxX = Math.max(...allX);
-  const minY = Math.min(...allY);
-  const maxY = Math.max(...allY);
+  const allX = allValidNodes.map((n) => n.x);
+  const allY = allValidNodes.map((n) => n.y);
+
+  const minX = allX.length > 0 ? Math.min(...allX) : 0;
+  const maxX = allX.length > 0 ? Math.max(...allX) : 100;
+  const minY = allY.length > 0 ? Math.min(...allY) : 0;
+  const maxY = allY.length > 0 ? Math.max(...allY) : 100;
 
   const rangeX = maxX - minX > 0 ? maxX - minX : 1.0;
   const rangeY = maxY - minY > 0 ? maxY - minY : 1.0;
@@ -107,10 +144,10 @@ export default function RouteVisualizer({ instance, routes }) {
     const segIdx = Math.min(Math.floor(totalSegPos), numSegments - 1);
     const segProgress = totalSegPos - segIdx;
 
-    const fromNode = nodes[routeNodes[segIdx]];
-    const toNode = nodes[routeNodes[segIdx + 1]];
+    const fromNode = getNode(routeNodes[segIdx]);
+    const toNode = getNode(routeNodes[segIdx + 1]);
 
-    if (!fromNode || !toNode) return null;
+    if (!fromNode || !toNode || fromNode.x === undefined || toNode.x === undefined) return null;
 
     const x1 = scaleX(fromNode.x);
     const y1 = scaleY(fromNode.y);
@@ -123,14 +160,17 @@ export default function RouteVisualizer({ instance, routes }) {
     const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
     const isAtDepot = toNode.id === (instance.depotIdx ?? 0);
+    const isStation = chargingStations.some((s) => s.id === toNode.id);
     const statusText = isAtDepot
       ? `Returning to Depot (0)`
-      : `Customer ${toNode.id}`;
+      : isStation
+      ? `Charging Station S${toNode.id}`
+      : `Customer C${toNode.id}`;
 
     return {
       x: currX,
       y: currY,
-      angle,
+      angle: isNaN(angle) ? 0 : angle,
       fromNode,
       toNode,
       segIdx,
@@ -144,9 +184,9 @@ export default function RouteVisualizer({ instance, routes }) {
     const curveOffset = (vIdx - (routeList.length - 1) / 2) * 12;
 
     const coords = routeNodes
-      .map((idx) => {
-        const node = nodes[idx];
-        if (!node) return null;
+      .map((id) => {
+        const node = getNode(id);
+        if (!node || node.x === undefined || node.y === undefined) return null;
         return { x: scaleX(node.x), y: scaleY(node.y) };
       })
       .filter(Boolean);
@@ -304,13 +344,14 @@ export default function RouteVisualizer({ instance, routes }) {
 
           {/* Render Informational Charging Stations if present */}
           {chargingStations.map((st) => {
+            if (!st || typeof st.x !== 'number' || typeof st.y !== 'number') return null;
             const cx = scaleX(st.x);
             const cy = scaleY(st.y);
             return (
               <g key={`st-${st.id}`} transform={`translate(${cx}, ${cy})`}>
-                <rect x="-10" y="-10" width="20" height="20" rx="4" fill="rgba(16, 185, 129, 0.25)" stroke="#10b981" strokeWidth="1.8" />
-                <circle r="3" fill="#34d399" />
-                <text x="0" y="22" textAnchor="middle" fill="#34d399" fontSize="10" fontWeight="700">
+                <rect x="-11" y="-11" width="22" height="22" rx="4" fill="rgba(16, 185, 129, 0.25)" stroke="#10b981" strokeWidth="2" />
+                <circle r="3.5" fill="#34d399" />
+                <text x="0" y="24" textAnchor="middle" fill="#34d399" fontSize="10" fontWeight="700">
                   S{st.id}
                 </text>
               </g>
@@ -321,7 +362,7 @@ export default function RouteVisualizer({ instance, routes }) {
           {routeList.map((r, rIdx) => {
             if (vehicleFilter !== 'all' && parseInt(vehicleFilter, 10) !== rIdx) return null;
             const pos = calculateVehiclePosition(r);
-            if (!pos || !pos.toNode) return null;
+            if (!pos || !pos.toNode || typeof pos.toNode.x !== 'number' || typeof pos.toNode.y !== 'number') return null;
             const tx = scaleX(pos.toNode.x);
             const ty = scaleY(pos.toNode.y);
 
@@ -343,7 +384,7 @@ export default function RouteVisualizer({ instance, routes }) {
           {routeList.map((r, rIdx) => {
             if (vehicleFilter !== 'all' && parseInt(vehicleFilter, 10) !== rIdx) return null;
             const pos = calculateVehiclePosition(r);
-            if (!pos) return null;
+            if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number' || isNaN(pos.x) || isNaN(pos.y)) return null;
             const style = ROUTE_STYLES[rIdx % ROUTE_STYLES.length];
 
             return (
@@ -359,7 +400,10 @@ export default function RouteVisualizer({ instance, routes }) {
           })}
 
           {/* Render Depot & Customer Nodes */}
-          {nodes.map((node) => {
+          {allValidNodes.map((node) => {
+            // Avoid duplicate rendering of charging stations already rendered above
+            if (chargingStations.some((s) => s.id === node.id) || node.isStation) return null;
+
             const isDepot = node.id === (instance.depotIdx ?? 0);
             const cx = scaleX(node.x);
             const cy = scaleY(node.y);
@@ -368,7 +412,7 @@ export default function RouteVisualizer({ instance, routes }) {
             const coordOffsetY = cy > height / 2 ? 38 : -30;
 
             return (
-              <g key={node.id} transform={`translate(${cx}, ${cy})`}>
+              <g key={`node-${node.id}`} transform={`translate(${cx}, ${cy})`}>
                 <circle
                   r={isDepot ? 16 : 11}
                   fill={isDepot ? 'rgba(245, 158, 11, 0.3)' : 'rgba(6, 182, 212, 0.22)'}
@@ -386,7 +430,7 @@ export default function RouteVisualizer({ instance, routes }) {
                   fontWeight="700"
                   fontFamily="Outfit, sans-serif"
                 >
-                  {isDepot ? `Depot (0)` : `C${node.id} (${node.demand}u)`}
+                  {isDepot ? `Depot (0)` : `C${node.id} (${node.demand || 0}u)`}
                 </text>
 
                 <text

@@ -1,13 +1,11 @@
 """
-QUBO Matrix Builder.
-Formulates VRP / EVRP instances into Quadratic Unconstrained Binary Optimization (QUBO) matrices.
-
-NOTE: Exact decision variable encoding, penalty terms, and penalty weights
-MUST be verified against the base paper (Aman and Sakib, 2026) before full implementation.
+QUBO Matrix Builder (Legacy Bridge).
+Wraps the modular src.quantum.qubo.VRPQuboBuilder implementation.
 """
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 import numpy as np
 from src.vrp.instance import VRPInstance
+from src.quantum.qubo import VRPQuboBuilder
 
 
 class QUBOBuilder:
@@ -15,48 +13,44 @@ class QUBOBuilder:
     Constructs the QUBO matrix (Q) for a given routing instance.
     """
 
-    def __init__(self, vrp_instance: VRPInstance, config: Dict[str, Any]):
+    def __init__(self, vrp_instance: VRPInstance, config: Optional[Dict[str, Any]] = None):
         """
         Args:
             vrp_instance (VRPInstance): Problem instance.
-            config (Dict[str, Any]): Configuration dictionary containing penalty weights.
+            config (Optional[Dict[str, Any]]): Configuration dictionary containing penalty weights.
         """
         self.instance = vrp_instance
-        self.config = config
-        self.num_vars = 0
+        self.config = config or {}
+        penalty_weight = self.config.get("penalty_weight", None)
+        penalty_multiplier = self.config.get("penalty_multiplier", 2.0)
+        self.builder = VRPQuboBuilder(
+            instance=vrp_instance,
+            penalty_multiplier=penalty_multiplier,
+            penalty_weight=penalty_weight,
+        )
+        self.num_vars = self.builder.num_vars
         self.Q_matrix = None
+        self.offset = 0.0
 
-    def build_vrp_qubo() -> Tuple[np.ndarray, Dict[str, int]]:
+    def build_vrp_qubo(self) -> Tuple[np.ndarray, float]:
         """
-        Formulates the standard VRP as a QUBO matrix.
+        Formulates the routing problem as a QUBO matrix.
 
         Returns:
-            Tuple[np.ndarray, Dict[str, int]]:
-                - Q_matrix: Upper triangular or symmetric N x N QUBO matrix.
-                - var_map: Mapping from binary variable names to matrix indices.
-
-        TODO: TO BE DETERMINED FROM BASE PAPER (Aman and Sakib, 2026):
-        - Variable encoding: x_{i,j,t} or x_{i,t}
-        - Exact penalty formulation for customer visit constraint
-        - Subtour elimination strategy
-        - Capacity penalty formulation
+            Tuple[np.ndarray, float]: Q_matrix and constant offset.
         """
-        raise NotImplementedError(
-            "TODO: QUBO formulation must be verified from base paper (Aman & Sakib, 2026) before implementation."
-        )
+        self.Q_matrix, self.offset = self.builder.build_qubo()
+        return self.Q_matrix, self.offset
 
     def decode_solution(self, bitstring: str) -> List[List[int]]:
         """
         Decodes a binary solution bitstring into structured vehicle routes.
 
         Args:
-            bitstring (str): Binary string result from QAOA measurement (e.g., '101001').
+            bitstring (str): Binary string result from QAOA measurement.
 
         Returns:
-            List[List[int]]: List of ordered node indices for each vehicle route.
-
-        TODO: TO BE DETERMINED FROM BASE PAPER.
+            List[List[int]]: Vehicle routes.
         """
-        raise NotImplementedError(
-            "TODO: Solution decoding logic must be verified from base paper before implementation."
-        )
+        route, is_valid, _ = self.builder.decode_bitstring(bitstring)
+        return [route]

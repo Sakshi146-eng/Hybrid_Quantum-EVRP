@@ -1,12 +1,13 @@
 """
-QAOA Solver.
-Constructs quantum circuits for QUBO problems and executes them using Qiskit simulators.
-
-NOTE: Exact QAOA layer structure (p), mixer hamiltonian choice, and initial state preparation
-MUST be verified against the base paper (Aman and Sakib, 2026).
+QAOA Solver (Legacy Bridge).
+Wraps the modular src.quantum.qaoa_solver.QAOAVRPSolver implementation.
 """
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 import numpy as np
+
+from src.vrp.instance import VRPInstance
+from src.quantum.qaoa_solver import QAOAVRPSolver
+from src.classical.solution import VRPSolution
 
 
 class QAOASolver:
@@ -14,38 +15,28 @@ class QAOASolver:
     Handles QAOA circuit construction, parameter evaluation, and sampling.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Args:
-            config (Dict[str, Any]): Configuration dictionary containing p_steps, shots, etc.
+            config (Optional[Dict[str, Any]]): Configuration dictionary containing p_steps, shots, etc.
         """
-        self.config = config
-        self.p_steps = config.get("qaoa", {}).get("p_steps", 1)
-        self.shots = config.get("qaoa", {}).get("shots", 1024)
+        self.config = config or {}
+        qaoa_cfg = self.config.get("qaoa", {})
+        self.p_steps = qaoa_cfg.get("p_steps", 1)
+        self.shots = qaoa_cfg.get("shots", 1024)
+        self.max_iter = qaoa_cfg.get("max_iter", 50)
+        self.seed = self.config.get("seed", 42)
 
-    def evaluate_circuit(
-        self, Q_matrix: np.ndarray, gammas: List[float], betas: List[float]
-    ) -> Tuple[float, Dict[str, int]]:
-        """
-        Executes QAOA circuit for given gamma and beta parameters and computes expectation value.
-
-        Args:
-            Q_matrix (np.ndarray): QUBO matrix.
-            gammas (List[float]): Gamma angle parameters for phase separator.
-            betas (List[float]): Beta angle parameters for mixer.
-
-        Returns:
-            Tuple[float, Dict[str, int]]:
-                - expectation_value: Energy / cost expectation value.
-                - counts: Measurement outcome counts dictionary (e.g. {'0110': 450, '1001': 574}).
-
-        TODO: TO BE DETERMINED FROM BASE PAPER:
-        - Exact Hamiltonian mapping (Ising model translation)
-        - Circuit optimization details
-        """
-        raise NotImplementedError(
-            "TODO: QAOA circuit execution logic to be implemented after QUBO mapping is verified."
+        self.solver = QAOAVRPSolver(
+            p_depth=self.p_steps,
+            shots=self.shots,
+            max_iter=self.max_iter,
+            seed=self.seed,
         )
+
+    def solve(self, instance: VRPInstance) -> VRPSolution:
+        """Solves instance using QAOA."""
+        return self.solver.solve(instance)
 
     def sample_best_bitstring(self, counts: Dict[str, int]) -> str:
         """
