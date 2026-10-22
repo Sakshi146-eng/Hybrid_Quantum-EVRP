@@ -1,0 +1,5194 @@
+[
+  {
+    "instance_name": "X-n360-k40-s9.evrp",
+    "customer_count": 4,
+    "seeds": [
+      42,
+      101,
+      777,
+      999
+    ],
+    "results_by_seed": {
+      "42": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.000151,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.088533,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.095063,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 1132.0062,
+          "feasible": false,
+          "runtime_seconds": 3.646224,
+          "optimality_gap_percent": 1.0516,
+          "routes": [
+            [
+              0,
+              3,
+              1,
+              4,
+              2,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": 1132.0062,
+          "repair_applied": true,
+          "fallback_used": true,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.011371,
+            "optimization_seconds": 3.48291,
+            "sampling_seconds": 0.058777,
+            "total_seconds": 3.645813
+          },
+          "top_candidates": [
+            {
+              "bitstring": "1001100100101110",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1132.0062,
+              "energy": 15728.4323,
+              "route": [
+                0,
+                3,
+                1,
+                4,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "0001001111011001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1220.7325,
+              "energy": 20325.1305,
+              "route": [
+                0,
+                1,
+                3,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1110000100000000",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1158.8793,
+              "energy": 6750.822,
+              "route": [
+                0,
+                3,
+                4,
+                1,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "1001110000100101",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 9259.4988,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0100011010001010",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1220.7325,
+              "energy": 8644.4247,
+              "route": [
+                0,
+                1,
+                3,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110001110101001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1259.3857,
+              "energy": 14114.1429,
+              "route": [
+                0,
+                1,
+                2,
+                4,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "1000100101100111",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 14746.3936,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0101101010000110",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1251.3164,
+              "energy": 8762.7607,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "1100100101010010",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1158.8793,
+              "energy": 9349.1358,
+              "route": [
+                0,
+                2,
+                1,
+                4,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "1110001011000001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1220.7325,
+              "energy": 11255.5945,
+              "route": [
+                0,
+                1,
+                3,
+                2,
+                4,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 3.4973,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.085688,
+            "qaoa_total_seconds": 3.411566,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.497268
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 1132.0061765670102,
+              "qaoa_feasible": false,
+              "qaoa_meta": {
+                "seed": 42,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 0,
+                "total_samples": 1024,
+                "valid_sample_rate": 0.0,
+                "raw_valid_sample_rate": 0.0,
+                "repaired_solution_rate": 100.0,
+                "best_raw_sample_distance": null,
+                "best_repaired_distance": 1132.0062,
+                "repair_applied": true,
+                "fallback_used": true,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  1.994
+                ],
+                "optimal_betas": [
+                  0.1622
+                ],
+                "min_energy_found": 18462.2643,
+                "penalty_weight": 1097.7522,
+                "hamiltonian_scale": 2835.1912,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.01027,
+                  "optimization_seconds": 3.291353,
+                  "sampling_seconds": 0.029705,
+                  "total_seconds": 3.411085
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "1001100100101110",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1132.0062,
+                    "energy": 15728.4323,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      4,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0001001111011001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1220.7325,
+                    "energy": 20325.1305,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1110000100000000",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1158.8793,
+                    "energy": 6750.822,
+                    "route": [
+                      0,
+                      3,
+                      4,
+                      1,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1001110000100101",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 9259.4988,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0100011010001010",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1220.7325,
+                    "energy": 8644.4247,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110001110101001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1259.3857,
+                    "energy": 14114.1429,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      4,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1000100101100111",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 14746.3936,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0101101010000110",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1251.3164,
+                    "energy": 8762.7607,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1100100101010010",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1158.8793,
+                    "energy": 9349.1358,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      4,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1110001011000001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1220.7325,
+                    "energy": 11255.5945,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      2,
+                      4,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": null,
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "101": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.000193,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.094151,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.086411,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 1144.4242,
+          "feasible": false,
+          "runtime_seconds": 3.600515,
+          "optimality_gap_percent": 2.1601,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              4,
+              1,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": 1144.4242,
+          "repair_applied": true,
+          "fallback_used": true,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.008109,
+            "optimization_seconds": 3.453399,
+            "sampling_seconds": 0.047084,
+            "total_seconds": 3.59984
+          },
+          "top_candidates": [
+            {
+              "bitstring": "1110111001100000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1144.4242,
+              "energy": 24372.6919,
+              "route": [
+                0,
+                2,
+                3,
+                4,
+                1,
+                0
+              ]
+            },
+            {
+              "bitstring": "1110000000000000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1251.3164,
+              "energy": 8844.6678,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0011001101010011",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1220.7325,
+              "energy": 23810.0097,
+              "route": [
+                0,
+                1,
+                3,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1010000011000001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1248.6414,
+              "energy": 5932.7962,
+              "route": [
+                0,
+                1,
+                4,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0011001001000001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1220.7325,
+              "energy": 5822.549,
+              "route": [
+                0,
+                1,
+                3,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1110010100001010",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1132.0062,
+              "energy": 12352.3845,
+              "route": [
+                0,
+                3,
+                1,
+                4,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "1011101101001010",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1235.1876,
+              "energy": 23264.6818,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000110100000000",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1235.1876,
+              "energy": 8944.1044,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110011010010110",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 17151.0468,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0010001010000000",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1251.3164,
+              "energy": 4709.1615,
+              "route": [
+                0,
+                3,
+                2,
+                1,
+                4,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 3.824399,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.092064,
+            "qaoa_total_seconds": 3.73227,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.824349
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 1144.4241931938204,
+              "qaoa_feasible": false,
+              "qaoa_meta": {
+                "seed": 101,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 0,
+                "total_samples": 1024,
+                "valid_sample_rate": 0.0,
+                "raw_valid_sample_rate": 0.0,
+                "repaired_solution_rate": 100.0,
+                "best_raw_sample_distance": null,
+                "best_repaired_distance": 1144.4242,
+                "repair_applied": true,
+                "fallback_used": true,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  6.0853
+                ],
+                "optimal_betas": [
+                  -2.3481
+                ],
+                "min_energy_found": 18171.9985,
+                "penalty_weight": 1097.7522,
+                "hamiltonian_scale": 2835.1912,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.008618,
+                  "optimization_seconds": 3.600913,
+                  "sampling_seconds": 0.038005,
+                  "total_seconds": 3.731763
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "1110111001100000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1144.4242,
+                    "energy": 24372.6919,
+                    "route": [
+                      0,
+                      2,
+                      3,
+                      4,
+                      1,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1110000000000000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1251.3164,
+                    "energy": 8844.6678,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0011001101010011",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1220.7325,
+                    "energy": 23810.0097,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1010000011000001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1248.6414,
+                    "energy": 5932.7962,
+                    "route": [
+                      0,
+                      1,
+                      4,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0011001001000001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1220.7325,
+                    "energy": 5822.549,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1110010100001010",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1132.0062,
+                    "energy": 12352.3845,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      4,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1011101101001010",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1235.1876,
+                    "energy": 23264.6818,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000110100000000",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1235.1876,
+                    "energy": 8944.1044,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110011010010110",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 17151.0468,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0010001010000000",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1251.3164,
+                    "energy": 4709.1615,
+                    "route": [
+                      0,
+                      3,
+                      2,
+                      1,
+                      4,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": null,
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "777": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.000204,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.085072,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.084907,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 3.212534,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 15,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 1.46,
+          "raw_valid_sample_rate_percent": 1.46,
+          "best_raw_sample_distance": 1120.2261,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.008224,
+            "optimization_seconds": 3.126361,
+            "sampling_seconds": 0.028283,
+            "total_seconds": 3.212245
+          },
+          "top_candidates": [
+            {
+              "bitstring": "0000000000000000",
+              "count": 58,
+              "probability": 0.0566,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 8782.018,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000001000000",
+              "count": 20,
+              "probability": 0.0195,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000100000",
+              "count": 17,
+              "probability": 0.0166,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000010",
+              "count": 14,
+              "probability": 0.0137,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000010000000",
+              "count": 14,
+              "probability": 0.0137,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6904.666,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000100000000000",
+              "count": 14,
+              "probability": 0.0137,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1235.1876,
+              "energy": 6667.5567,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000010000",
+              "count": 13,
+              "probability": 0.0127,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6904.666,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000001",
+              "count": 12,
+              "probability": 0.0117,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 6833.4224,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0010000000000000",
+              "count": 10,
+              "probability": 0.0098,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1251.3164,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000100",
+              "count": 10,
+              "probability": 0.0098,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 3.258106,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.101951,
+            "qaoa_total_seconds": 3.156109,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.258077
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 1120.2261019146383,
+              "qaoa_feasible": true,
+              "qaoa_meta": {
+                "seed": 777,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 15,
+                "total_samples": 1024,
+                "valid_sample_rate": 1.46,
+                "raw_valid_sample_rate": 1.46,
+                "repaired_solution_rate": 0.0,
+                "best_raw_sample_distance": 1120.2261,
+                "best_repaired_distance": null,
+                "repair_applied": false,
+                "fallback_used": false,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  0.9237
+                ],
+                "optimal_betas": [
+                  2.1302
+                ],
+                "min_energy_found": 8001.0204,
+                "penalty_weight": 1097.7522,
+                "hamiltonian_scale": 2835.1912,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.008939,
+                  "optimization_seconds": 3.059982,
+                  "sampling_seconds": 0.036419,
+                  "total_seconds": 3.155766
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "0000000000000000",
+                    "count": 58,
+                    "probability": 0.0566,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 8782.018,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000001000000",
+                    "count": 20,
+                    "probability": 0.0195,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000100000",
+                    "count": 17,
+                    "probability": 0.0166,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000010",
+                    "count": 14,
+                    "probability": 0.0137,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000010000000",
+                    "count": 14,
+                    "probability": 0.0137,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6904.666,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000100000000000",
+                    "count": 14,
+                    "probability": 0.0137,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1235.1876,
+                    "energy": 6667.5567,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000010000",
+                    "count": 13,
+                    "probability": 0.0127,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6904.666,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000001",
+                    "count": 12,
+                    "probability": 0.0117,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 6833.4224,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0010000000000000",
+                    "count": 10,
+                    "probability": 0.0098,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1251.3164,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000100",
+                    "count": 10,
+                    "probability": 0.0098,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": "0001010010000010",
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "999": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.000199,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.09733,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 0.081338,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 3.263288,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              1,
+              4,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 11,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 1.07,
+          "raw_valid_sample_rate_percent": 1.07,
+          "best_raw_sample_distance": 1120.2261,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.008745,
+            "optimization_seconds": 3.177511,
+            "sampling_seconds": 0.02744,
+            "total_seconds": 3.263075
+          },
+          "top_candidates": [
+            {
+              "bitstring": "0000000000000000",
+              "count": 71,
+              "probability": 0.0693,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 8782.018,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000010000000",
+              "count": 21,
+              "probability": 0.0205,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6904.666,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000100000",
+              "count": 20,
+              "probability": 0.0195,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000001000000",
+              "count": 15,
+              "probability": 0.0146,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000010",
+              "count": 14,
+              "probability": 0.0137,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000010000",
+              "count": 12,
+              "probability": 0.0117,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1130.9705,
+              "energy": 6904.666,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000010000000000",
+              "count": 12,
+              "probability": 0.0117,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1235.1876,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000100",
+              "count": 9,
+              "probability": 0.0088,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 6586.5135,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000001",
+              "count": 9,
+              "probability": 0.0088,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1247.6057,
+              "energy": 6833.4224,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1000000000000000",
+              "count": 9,
+              "probability": 0.0088,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 1251.3164,
+              "energy": 6649.1633,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1120.2261,
+          "feasible": true,
+          "runtime_seconds": 3.339164,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              1,
+              3,
+              2,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.098423,
+            "qaoa_total_seconds": 3.240703,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.33914
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 1120.2261019146383,
+              "qaoa_feasible": true,
+              "qaoa_meta": {
+                "seed": 999,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 11,
+                "total_samples": 1024,
+                "valid_sample_rate": 1.07,
+                "raw_valid_sample_rate": 1.07,
+                "repaired_solution_rate": 0.0,
+                "best_raw_sample_distance": 1120.2261,
+                "best_repaired_distance": null,
+                "repair_applied": false,
+                "fallback_used": false,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  0.9508
+                ],
+                "optimal_betas": [
+                  2.1901
+                ],
+                "min_energy_found": 8121.9129,
+                "penalty_weight": 1097.7522,
+                "hamiltonian_scale": 2835.1912,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.008088,
+                  "optimization_seconds": 3.082728,
+                  "sampling_seconds": 0.046859,
+                  "total_seconds": 3.24035
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "0000000000000000",
+                    "count": 71,
+                    "probability": 0.0693,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 8782.018,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000010000000",
+                    "count": 21,
+                    "probability": 0.0205,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6904.666,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000100000",
+                    "count": 20,
+                    "probability": 0.0195,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000001000000",
+                    "count": 15,
+                    "probability": 0.0146,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000010",
+                    "count": 14,
+                    "probability": 0.0137,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000010000",
+                    "count": 12,
+                    "probability": 0.0117,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1130.9705,
+                    "energy": 6904.666,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000010000000000",
+                    "count": 12,
+                    "probability": 0.0117,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1235.1876,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000100",
+                    "count": 9,
+                    "probability": 0.0088,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 6586.5135,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000001",
+                    "count": 9,
+                    "probability": 0.0088,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1247.6057,
+                    "energy": 6833.4224,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1000000000000000",
+                    "count": 9,
+                    "probability": 0.0088,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 1251.3164,
+                    "energy": 6649.1633,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": "1000001000010100",
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      }
+    }
+  },
+  {
+    "instance_name": "E-n29-k4-s7.evrp",
+    "customer_count": 4,
+    "seeds": [
+      42,
+      101,
+      777,
+      999
+    ],
+    "results_by_seed": {
+      "42": {
+        "benchmark_instance": "E-n29-k4-s7.evrp",
+        "sub_instance_name": "E-n29-k4-s7.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.000112,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.104348,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.093099,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 123.4336,
+          "feasible": false,
+          "runtime_seconds": 3.218137,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": 123.4336,
+          "repair_applied": true,
+          "fallback_used": true,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.011826,
+            "optimization_seconds": 3.100704,
+            "sampling_seconds": 0.033561,
+            "total_seconds": 3.217842
+          },
+          "top_candidates": [
+            {
+              "bitstring": "1001011001011010",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 1164.4377,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1001110001100001",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 131.2898,
+              "energy": 900.5782,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1001011000000011",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 155.8171,
+              "energy": 801.3127,
+              "route": [
+                0,
+                1,
+                3,
+                4,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "0101000111101010",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.5871,
+              "energy": 1412.1196,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1001101001100101",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 131.2898,
+              "energy": 1202.3066,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0011011001011000",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 167.8363,
+              "energy": 892.2456,
+              "route": [
+                0,
+                2,
+                3,
+                1,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110011110001001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 155.8171,
+              "energy": 1344.9215,
+              "route": [
+                0,
+                1,
+                3,
+                4,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "1110010000010101",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 156.0528,
+              "energy": 1241.251,
+              "route": [
+                0,
+                1,
+                4,
+                3,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "1000001101100011",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 134.8036,
+              "energy": 1077.278,
+              "route": [
+                0,
+                1,
+                2,
+                4,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110100000110101",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 134.8036,
+              "energy": 891.2465,
+              "route": [
+                0,
+                1,
+                2,
+                4,
+                3,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.486972,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.092949,
+            "qaoa_total_seconds": 3.39398,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.486944
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 123.43364483297964,
+              "qaoa_feasible": false,
+              "qaoa_meta": {
+                "seed": 42,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 0,
+                "total_samples": 1024,
+                "valid_sample_rate": 0.0,
+                "raw_valid_sample_rate": 0.0,
+                "repaired_solution_rate": 100.0,
+                "best_raw_sample_distance": null,
+                "best_repaired_distance": 123.4336,
+                "repair_applied": true,
+                "fallback_used": true,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  1.9252
+                ],
+                "optimal_betas": [
+                  0.1817
+                ],
+                "min_energy_found": 1726.7903,
+                "penalty_weight": 98.732,
+                "hamiltonian_scale": 239.1698,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.009144,
+                  "optimization_seconds": 3.267783,
+                  "sampling_seconds": 0.03305,
+                  "total_seconds": 3.39356
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "1001011001011010",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 1164.4377,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1001110001100001",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 131.2898,
+                    "energy": 900.5782,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1001011000000011",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 155.8171,
+                    "energy": 801.3127,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      4,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0101000111101010",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.5871,
+                    "energy": 1412.1196,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1001101001100101",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 131.2898,
+                    "energy": 1202.3066,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0011011001011000",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 167.8363,
+                    "energy": 892.2456,
+                    "route": [
+                      0,
+                      2,
+                      3,
+                      1,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110011110001001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 155.8171,
+                    "energy": 1344.9215,
+                    "route": [
+                      0,
+                      1,
+                      3,
+                      4,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1110010000010101",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 156.0528,
+                    "energy": 1241.251,
+                    "route": [
+                      0,
+                      1,
+                      4,
+                      3,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1000001101100011",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 134.8036,
+                    "energy": 1077.278,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      4,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110100000110101",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 134.8036,
+                    "energy": 891.2465,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      4,
+                      3,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": null,
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 145.0,
+            "y": 215.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 151.0,
+              "y": 264.0,
+              "demand": 1100.0
+            },
+            {
+              "id": 2,
+              "x": 159.0,
+              "y": 261.0,
+              "demand": 700.0
+            },
+            {
+              "id": 3,
+              "x": 130.0,
+              "y": 254.0,
+              "demand": 800.0
+            },
+            {
+              "id": 4,
+              "x": 128.0,
+              "y": 252.0,
+              "demand": 1400.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "101": {
+        "benchmark_instance": "E-n29-k4-s7.evrp",
+        "sub_instance_name": "E-n29-k4-s7.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.000203,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.084442,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.079799,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.227246,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 2,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.2,
+          "raw_valid_sample_rate_percent": 0.2,
+          "best_raw_sample_distance": 123.4336,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.00865,
+            "optimization_seconds": 3.104819,
+            "sampling_seconds": 0.032427,
+            "total_seconds": 3.22699
+          },
+          "top_candidates": [
+            {
+              "bitstring": "0011010110000110",
+              "count": 4,
+              "probability": 0.0039,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.5871,
+              "energy": 865.4158,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0101101010100101",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 134.8036,
+              "energy": 1170.5442,
+              "route": [
+                0,
+                1,
+                2,
+                4,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "1010010110010110",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 1154.6154,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110100101101001",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 134.8036,
+              "energy": 1171.0131,
+              "route": [
+                0,
+                1,
+                2,
+                4,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0101101000111100",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 167.8363,
+              "energy": 1153.6919,
+              "route": [
+                0,
+                2,
+                3,
+                1,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "1100100100100110",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 171.3501,
+              "energy": 888.5693,
+              "route": [
+                0,
+                3,
+                1,
+                4,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "1011101001000100",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 1138.5355,
+              "route": [
+                0,
+                4,
+                3,
+                1,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "1100010100111010",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 1194.7895,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110101111000110",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.5871,
+              "energy": 1982.8267,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0110101000011100",
+              "count": 2,
+              "probability": 0.002,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 167.8363,
+              "energy": 897.7992,
+              "route": [
+                0,
+                2,
+                3,
+                1,
+                4,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.312727,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.089569,
+            "qaoa_total_seconds": 3.223117,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.3127
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 123.43364483297964,
+              "qaoa_feasible": true,
+              "qaoa_meta": {
+                "seed": 101,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 2,
+                "total_samples": 1024,
+                "valid_sample_rate": 0.2,
+                "raw_valid_sample_rate": 0.2,
+                "repaired_solution_rate": 0.0,
+                "best_raw_sample_distance": 123.4336,
+                "best_repaired_distance": null,
+                "repair_applied": false,
+                "fallback_used": false,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  1.8056
+                ],
+                "optimal_betas": [
+                  0.3691
+                ],
+                "min_energy_found": 1597.8296,
+                "penalty_weight": 98.732,
+                "hamiltonian_scale": 239.1698,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.009181,
+                  "optimization_seconds": 3.093893,
+                  "sampling_seconds": 0.03732,
+                  "total_seconds": 3.222737
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "0011010110000110",
+                    "count": 4,
+                    "probability": 0.0039,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.5871,
+                    "energy": 865.4158,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0101101010100101",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 134.8036,
+                    "energy": 1170.5442,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      4,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1010010110010110",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 1154.6154,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110100101101001",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 134.8036,
+                    "energy": 1171.0131,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      4,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0101101000111100",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 167.8363,
+                    "energy": 1153.6919,
+                    "route": [
+                      0,
+                      2,
+                      3,
+                      1,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1100100100100110",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 171.3501,
+                    "energy": 888.5693,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      4,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1011101001000100",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 1138.5355,
+                    "route": [
+                      0,
+                      4,
+                      3,
+                      1,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1100010100111010",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 1194.7895,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110101111000110",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.5871,
+                    "energy": 1982.8267,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0110101000011100",
+                    "count": 2,
+                    "probability": 0.002,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 167.8363,
+                    "energy": 897.7992,
+                    "route": [
+                      0,
+                      2,
+                      3,
+                      1,
+                      4,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": "1000010000010010",
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 145.0,
+            "y": 215.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 151.0,
+              "y": 264.0,
+              "demand": 1100.0
+            },
+            {
+              "id": 2,
+              "x": 159.0,
+              "y": 261.0,
+              "demand": 700.0
+            },
+            {
+              "id": 3,
+              "x": 130.0,
+              "y": 254.0,
+              "demand": 800.0
+            },
+            {
+              "id": 4,
+              "x": 128.0,
+              "y": 252.0,
+              "demand": 1400.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "777": {
+        "benchmark_instance": "E-n29-k4-s7.evrp",
+        "sub_instance_name": "E-n29-k4-s7.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.00018,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.084713,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.07981,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.215518,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 17,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 1.66,
+          "raw_valid_sample_rate_percent": 1.66,
+          "best_raw_sample_distance": 123.4336,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.008983,
+            "optimization_seconds": 3.128884,
+            "sampling_seconds": 0.028958,
+            "total_seconds": 3.215197
+          },
+          "top_candidates": [
+            {
+              "bitstring": "0000000000000000",
+              "count": 59,
+              "probability": 0.0576,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 131.2898,
+              "energy": 789.8557,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0001000000000000",
+              "count": 15,
+              "probability": 0.0146,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 633.1103,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000001000000000",
+              "count": 14,
+              "probability": 0.0137,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.5871,
+              "energy": 592.3918,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000000001",
+              "count": 13,
+              "probability": 0.0127,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 131.2898,
+              "energy": 641.7577,
+              "route": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000100000000000",
+              "count": 13,
+              "probability": 0.0127,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.5871,
+              "energy": 634.1769,
+              "route": [
+                0,
+                3,
+                1,
+                2,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000010000000",
+              "count": 12,
+              "probability": 0.0117,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 640.475,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000100000",
+              "count": 11,
+              "probability": 0.0107,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 592.3918,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000000010000",
+              "count": 11,
+              "probability": 0.0107,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 123.4336,
+              "energy": 640.475,
+              "route": [
+                0,
+                2,
+                1,
+                3,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0100000000000000",
+              "count": 10,
+              "probability": 0.0098,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 592.3918,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "1000000000000000",
+              "count": 10,
+              "probability": 0.0098,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 633.1103,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.274683,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              3,
+              1,
+              2,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.103074,
+            "qaoa_total_seconds": 3.171564,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.274652
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 123.43364483297964,
+              "qaoa_feasible": true,
+              "qaoa_meta": {
+                "seed": 777,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 17,
+                "total_samples": 1024,
+                "valid_sample_rate": 1.66,
+                "raw_valid_sample_rate": 1.66,
+                "repaired_solution_rate": 0.0,
+                "best_raw_sample_distance": 123.4336,
+                "best_repaired_distance": null,
+                "repair_applied": false,
+                "fallback_used": false,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  0.8786
+                ],
+                "optimal_betas": [
+                  2.1401
+                ],
+                "min_energy_found": 745.0082,
+                "penalty_weight": 98.732,
+                "hamiltonian_scale": 239.1698,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.008971,
+                  "optimization_seconds": 3.086053,
+                  "sampling_seconds": 0.028667,
+                  "total_seconds": 3.171242
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "0000000000000000",
+                    "count": 59,
+                    "probability": 0.0576,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 131.2898,
+                    "energy": 789.8557,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0001000000000000",
+                    "count": 15,
+                    "probability": 0.0146,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 633.1103,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000001000000000",
+                    "count": 14,
+                    "probability": 0.0137,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.5871,
+                    "energy": 592.3918,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000000001",
+                    "count": 13,
+                    "probability": 0.0127,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 131.2898,
+                    "energy": 641.7577,
+                    "route": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000100000000000",
+                    "count": 13,
+                    "probability": 0.0127,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.5871,
+                    "energy": 634.1769,
+                    "route": [
+                      0,
+                      3,
+                      1,
+                      2,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000010000000",
+                    "count": 12,
+                    "probability": 0.0117,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 640.475,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000100000",
+                    "count": 11,
+                    "probability": 0.0107,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 592.3918,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000000010000",
+                    "count": 11,
+                    "probability": 0.0107,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 123.4336,
+                    "energy": 640.475,
+                    "route": [
+                      0,
+                      2,
+                      1,
+                      3,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0100000000000000",
+                    "count": 10,
+                    "probability": 0.0098,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 592.3918,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1000000000000000",
+                    "count": 10,
+                    "probability": 0.0098,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 633.1103,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": "0001001010000100",
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 145.0,
+            "y": 215.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 151.0,
+              "y": 264.0,
+              "demand": 1100.0
+            },
+            {
+              "id": 2,
+              "x": 159.0,
+              "y": 261.0,
+              "demand": 700.0
+            },
+            {
+              "id": 3,
+              "x": 130.0,
+              "y": 254.0,
+              "demand": 800.0
+            },
+            {
+              "id": 4,
+              "x": 128.0,
+              "y": 252.0,
+              "demand": 1400.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "999": {
+        "benchmark_instance": "E-n29-k4-s7.evrp",
+        "sub_instance_name": "E-n29-k4-s7.evrp_sub_4c",
+        "customer_count": 4,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "qubits_required": 16,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.000213,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 24
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.101004,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 0.080517,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.157967,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "p_depth": 1,
+          "qubits": 16,
+          "shots": 1024,
+          "valid_samples": 30,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 2.93,
+          "raw_valid_sample_rate_percent": 2.93,
+          "best_raw_sample_distance": 123.4336,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 24,
+          "timing_breakdown": {
+            "circuit_prep_seconds": 0.008963,
+            "optimization_seconds": 3.052592,
+            "sampling_seconds": 0.030759,
+            "total_seconds": 3.157699
+          },
+          "top_candidates": [
+            {
+              "bitstring": "0000000101001000",
+              "count": 4,
+              "probability": 0.0039,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 297.1591,
+              "route": [
+                0,
+                3,
+                2,
+                1,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0010010001000000",
+              "count": 4,
+              "probability": 0.0039,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.5871,
+              "energy": 430.0363,
+              "route": [
+                0,
+                4,
+                2,
+                1,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0001100000100000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 175.4568,
+              "energy": 312.2477,
+              "route": [
+                0,
+                4,
+                2,
+                3,
+                1,
+                0
+              ]
+            },
+            {
+              "bitstring": "0001000001000010",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 272.6687,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "0100000100101000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": true,
+              "raw_distance": 179.2063,
+              "repaired_distance": 179.2063,
+              "energy": 179.2063,
+              "route": [
+                0,
+                3,
+                2,
+                4,
+                1,
+                0
+              ]
+            },
+            {
+              "bitstring": "0010100000000100",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 167.8363,
+              "energy": 288.4507,
+              "route": [
+                0,
+                4,
+                1,
+                3,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "0000000101000000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 436.713,
+              "route": [
+                0,
+                3,
+                2,
+                1,
+                4,
+                0
+              ]
+            },
+            {
+              "bitstring": "0010000001000100",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 453.1501,
+              "route": [
+                0,
+                4,
+                1,
+                2,
+                3,
+                0
+              ]
+            },
+            {
+              "bitstring": "1000001000000000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 127.1831,
+              "energy": 435.6464,
+              "route": [
+                0,
+                3,
+                4,
+                1,
+                2,
+                0
+              ]
+            },
+            {
+              "bitstring": "0100000101001000",
+              "count": 3,
+              "probability": 0.0029,
+              "is_valid": false,
+              "raw_distance": null,
+              "repaired_distance": 146.8228,
+              "energy": 323.1013,
+              "route": [
+                0,
+                3,
+                2,
+                1,
+                4,
+                0
+              ]
+            }
+          ],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": null
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 123.4336,
+          "feasible": true,
+          "runtime_seconds": 3.303993,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              1,
+              3,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 1,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.090083,
+            "qaoa_total_seconds": 3.213853,
+            "local_search_total_seconds": 0.0,
+            "total_hybrid_seconds": 3.303953
+          },
+          "subproblem_logs": [
+            {
+              "iteration": 1,
+              "type": "full_instance_qaoa",
+              "qaoa_distance": 123.43364483297964,
+              "qaoa_feasible": true,
+              "qaoa_meta": {
+                "seed": 999,
+                "params": {},
+                "p_depth": 1,
+                "qubits": 16,
+                "shots": 1024,
+                "valid_samples": 30,
+                "total_samples": 1024,
+                "valid_sample_rate": 2.93,
+                "raw_valid_sample_rate": 2.93,
+                "repaired_solution_rate": 0.0,
+                "best_raw_sample_distance": 123.4336,
+                "best_repaired_distance": null,
+                "repair_applied": false,
+                "fallback_used": false,
+                "optimizer_evaluations": 24,
+                "optimal_gammas": [
+                  0.4976
+                ],
+                "optimal_betas": [
+                  2.7513
+                ],
+                "min_energy_found": 530.9872,
+                "penalty_weight": 98.732,
+                "hamiltonian_scale": 239.1698,
+                "timing_breakdown": {
+                  "circuit_prep_seconds": 0.008577,
+                  "optimization_seconds": 3.098316,
+                  "sampling_seconds": 0.039987,
+                  "total_seconds": 3.213399
+                },
+                "top_candidates": [
+                  {
+                    "bitstring": "0000000101001000",
+                    "count": 4,
+                    "probability": 0.0039,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 297.1591,
+                    "route": [
+                      0,
+                      3,
+                      2,
+                      1,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0010010001000000",
+                    "count": 4,
+                    "probability": 0.0039,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.5871,
+                    "energy": 430.0363,
+                    "route": [
+                      0,
+                      4,
+                      2,
+                      1,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0001100000100000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 175.4568,
+                    "energy": 312.2477,
+                    "route": [
+                      0,
+                      4,
+                      2,
+                      3,
+                      1,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0001000001000010",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 272.6687,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0100000100101000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": true,
+                    "raw_distance": 179.2063,
+                    "repaired_distance": 179.2063,
+                    "energy": 179.2063,
+                    "route": [
+                      0,
+                      3,
+                      2,
+                      4,
+                      1,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0010100000000100",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 167.8363,
+                    "energy": 288.4507,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      3,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0000000101000000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 436.713,
+                    "route": [
+                      0,
+                      3,
+                      2,
+                      1,
+                      4,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0010000001000100",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 453.1501,
+                    "route": [
+                      0,
+                      4,
+                      1,
+                      2,
+                      3,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "1000001000000000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 127.1831,
+                    "energy": 435.6464,
+                    "route": [
+                      0,
+                      3,
+                      4,
+                      1,
+                      2,
+                      0
+                    ]
+                  },
+                  {
+                    "bitstring": "0100000101001000",
+                    "count": 3,
+                    "probability": 0.0029,
+                    "is_valid": false,
+                    "raw_distance": null,
+                    "repaired_distance": 146.8228,
+                    "energy": 323.1013,
+                    "route": [
+                      0,
+                      3,
+                      2,
+                      1,
+                      4,
+                      0
+                    ]
+                  }
+                ],
+                "best_valid_bitstring": "1000010000010010",
+                "device": "Qiskit Aer Simulator (Classical Emulation)"
+              }
+            }
+          ]
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 145.0,
+            "y": 215.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 151.0,
+              "y": 264.0,
+              "demand": 1100.0
+            },
+            {
+              "id": 2,
+              "x": 159.0,
+              "y": 261.0,
+              "demand": 700.0
+            },
+            {
+              "id": 3,
+              "x": 130.0,
+              "y": 254.0,
+              "demand": 800.0
+            },
+            {
+              "id": 4,
+              "x": 128.0,
+              "y": 252.0,
+              "demand": 1400.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      }
+    }
+  },
+  {
+    "instance_name": "X-n360-k40-s9.evrp",
+    "customer_count": 6,
+    "seeds": [
+      42,
+      101,
+      777,
+      999
+    ],
+    "results_by_seed": {
+      "42": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_6c",
+        "customer_count": 6,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "qubits_required": 36,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.00652,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 720
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1243.0127,
+          "feasible": true,
+          "runtime_seconds": 0.091327,
+          "optimality_gap_percent": 0.4171,
+          "routes": [
+            [
+              0,
+              2,
+              4,
+              3,
+              5,
+              1,
+              6,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.085352,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.4154,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 1
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": null,
+          "feasible": false,
+          "runtime_seconds": 0.0,
+          "optimality_gap_percent": null,
+          "routes": [],
+          "p_depth": 1,
+          "qubits": 36,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 0,
+          "timing_breakdown": {},
+          "top_candidates": [],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": "Whole-instance QAOA simulation requires 36 qubits (> 16 qubits), exceeding classical statevector limits. Decomposed into local subproblems in Hybrid GA-QAOA."
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 12.908846,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.4154,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 4,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 1,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.087792,
+            "qaoa_total_seconds": 12.819922,
+            "local_search_total_seconds": 0.001008,
+            "total_hybrid_seconds": 12.908813
+          },
+          "subproblem_logs": []
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            },
+            {
+              "id": 5,
+              "x": 795.0,
+              "y": 425.0,
+              "demand": 29.0
+            },
+            {
+              "id": 6,
+              "x": 636.0,
+              "y": 463.0,
+              "demand": 55.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "101": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_6c",
+        "customer_count": 6,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "qubits_required": 36,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.00662,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 720
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1243.0127,
+          "feasible": true,
+          "runtime_seconds": 0.086577,
+          "optimality_gap_percent": 0.4171,
+          "routes": [
+            [
+              0,
+              2,
+              4,
+              3,
+              5,
+              1,
+              6,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.085312,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.4154,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 1
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": null,
+          "feasible": false,
+          "runtime_seconds": 0.0,
+          "optimality_gap_percent": null,
+          "routes": [],
+          "p_depth": 1,
+          "qubits": 36,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 0,
+          "timing_breakdown": {},
+          "top_candidates": [],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": "Whole-instance QAOA simulation requires 36 qubits (> 16 qubits), exceeding classical statevector limits. Decomposed into local subproblems in Hybrid GA-QAOA."
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 12.954365,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.4154,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 4,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 1,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.085053,
+            "qaoa_total_seconds": 12.868473,
+            "local_search_total_seconds": 0.00075,
+            "total_hybrid_seconds": 12.954332
+          },
+          "subproblem_logs": []
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            },
+            {
+              "id": 5,
+              "x": 795.0,
+              "y": 425.0,
+              "demand": 29.0
+            },
+            {
+              "id": 6,
+              "x": 636.0,
+              "y": 463.0,
+              "demand": 55.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "777": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_6c",
+        "customer_count": 6,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "qubits_required": 36,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.006029,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 720
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.090096,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.083739,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": null,
+          "feasible": false,
+          "runtime_seconds": 0.0,
+          "optimality_gap_percent": null,
+          "routes": [],
+          "p_depth": 1,
+          "qubits": 36,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 0,
+          "timing_breakdown": {},
+          "top_candidates": [],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": "Whole-instance QAOA simulation requires 36 qubits (> 16 qubits), exceeding classical statevector limits. Decomposed into local subproblems in Hybrid GA-QAOA."
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 6.753103,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 2,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.085125,
+            "qaoa_total_seconds": 6.667455,
+            "local_search_total_seconds": 0.000461,
+            "total_hybrid_seconds": 6.753071
+          },
+          "subproblem_logs": []
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            },
+            {
+              "id": 5,
+              "x": 795.0,
+              "y": 425.0,
+              "demand": 29.0
+            },
+            {
+              "id": 6,
+              "x": 636.0,
+              "y": 463.0,
+              "demand": 55.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      },
+      "999": {
+        "benchmark_instance": "X-n360-k40-s9.evrp",
+        "sub_instance_name": "X-n360-k40-s9.evrp_sub_6c",
+        "customer_count": 6,
+        "selected_customer_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "qubits_required": 36,
+        "exact_baseline": {
+          "algorithm": "Exact (Brute Force)",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.006576,
+          "routes": [
+            [
+              0,
+              2,
+              3,
+              5,
+              1,
+              6,
+              4,
+              0
+            ]
+          ],
+          "evaluated_tours": 720
+        },
+        "classical_ga": {
+          "algorithm": "Genetic Algorithm",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.100433,
+          "optimality_gap_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              6,
+              1,
+              5,
+              3,
+              2,
+              0
+            ]
+          ],
+          "generations": 25,
+          "population_size": 40
+        },
+        "ga_local_search": {
+          "algorithm": "GA + Local Search",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 0.086275,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              6,
+              1,
+              5,
+              3,
+              2,
+              0
+            ]
+          ],
+          "improvements_count": 0
+        },
+        "qaoa_simulator": {
+          "algorithm": "QAOA Simulator",
+          "total_distance": null,
+          "feasible": false,
+          "runtime_seconds": 0.0,
+          "optimality_gap_percent": null,
+          "routes": [],
+          "p_depth": 1,
+          "qubits": 36,
+          "shots": 1024,
+          "valid_samples": 0,
+          "total_samples": 1024,
+          "valid_sample_rate_percent": 0.0,
+          "raw_valid_sample_rate_percent": 0.0,
+          "best_raw_sample_distance": null,
+          "best_repaired_distance": null,
+          "repair_applied": false,
+          "fallback_used": false,
+          "optimizer_evaluations": 0,
+          "timing_breakdown": {},
+          "top_candidates": [],
+          "device": "Qiskit Aer Simulator (Classical Emulation)",
+          "simulation_note": "Whole-instance QAOA simulation requires 36 qubits (> 16 qubits), exceeding classical statevector limits. Decomposed into local subproblems in Hybrid GA-QAOA."
+        },
+        "hybrid_ga_qaoa": {
+          "algorithm": "Hybrid GA-QAOA",
+          "total_distance": 1237.8491,
+          "feasible": true,
+          "runtime_seconds": 6.50056,
+          "optimality_gap_percent": 0.0,
+          "improvement_over_ga_percent": 0.0,
+          "routes": [
+            [
+              0,
+              4,
+              6,
+              1,
+              5,
+              3,
+              2,
+              0
+            ]
+          ],
+          "qaoa_calls_count": 2,
+          "qaoa_improvements_count": 0,
+          "hybrid_improvements_count": 0,
+          "timing_breakdown": {
+            "ga_initialization_seconds": 0.085972,
+            "qaoa_total_seconds": 6.414072,
+            "local_search_total_seconds": 0.000456,
+            "total_hybrid_seconds": 6.500529
+          },
+          "subproblem_logs": []
+        },
+        "visualization_nodes": {
+          "depot": {
+            "id": 0,
+            "x": 500.0,
+            "y": 500.0
+          },
+          "customers": [
+            {
+              "id": 1,
+              "x": 740.0,
+              "y": 442.0,
+              "demand": 43.0
+            },
+            {
+              "id": 2,
+              "x": 261.0,
+              "y": 710.0,
+              "demand": 82.0
+            },
+            {
+              "id": 3,
+              "x": 578.0,
+              "y": 522.0,
+              "demand": 57.0
+            },
+            {
+              "id": 4,
+              "x": 562.0,
+              "y": 509.0,
+              "demand": 51.0
+            },
+            {
+              "id": 5,
+              "x": 795.0,
+              "y": 425.0,
+              "demand": 29.0
+            },
+            {
+              "id": 6,
+              "x": 636.0,
+              "y": 463.0,
+              "demand": 55.0
+            }
+          ]
+        },
+        "limitations": {
+          "model": "Single-vehicle routing without EV charging or battery dynamics",
+          "scope": "Phase 1 QUBO-QAOA and Hybrid GA-QAOA foundational comparison",
+          "hardware": "Classical simulation via Qiskit Aer (not physical quantum hardware)"
+        }
+      }
+    }
+  }
+]
