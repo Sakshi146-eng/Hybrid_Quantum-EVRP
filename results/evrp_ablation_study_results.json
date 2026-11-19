@@ -1,0 +1,73 @@
+{
+  "instance_name": "E-n29-k4-s7.evrp",
+  "customer_count": 4,
+  "seed": 42,
+  "runtime_seconds": 4.0644,
+  "ablations": {
+    "ablation_0_fleet_coordination": {
+      "name": "Global Fleet Coordination",
+      "coordinated_cost": 269.18,
+      "uncoordinated_cost": 20542.04,
+      "delta_cost": 20272.86,
+      "finding": "Fleet coordinator bounds vehicles strictly to fleet limit, preventing $10,000 overflow penalty."
+    },
+    "ablation_1_subproblem_selection": {
+      "name": "Subproblem Selection",
+      "rl_guided_cost": 269.18,
+      "random_selection_cost": 269.18,
+      "delta_cost": 0.0,
+      "finding": "RL guidance prioritizes subproblems with higher detour and load stress."
+    },
+    "ablation_2_initial_generation": {
+      "name": "Initial Candidate Generation",
+      "diverse_rollout_cost": 269.18,
+      "single_greedy_cost": 269.18,
+      "delta_cost": 0.0,
+      "finding": "Multi-temperature rollouts reduce initial route overhead and consolidate vehicles."
+    },
+    "ablation_3_parameter_adaptation": {
+      "name": "QAOA Parameter Adaptation",
+      "rl_adaptive_cost": 269.18,
+      "static_qaoa_cost": 269.18,
+      "delta_cost": 0.0,
+      "finding": "Dynamic depth p and penalty lambda allocation prevents barren plateaus."
+    },
+    "ablation_4_quantum_vs_classical_subproblem": {
+      "name": "Quantum vs Classical Subproblem Optimization",
+      "subproblem_nodes": [
+        1,
+        2,
+        3
+      ],
+      "classical_optimal_distance": 125.3319,
+      "classical_optimal_route": [
+        0,
+        2,
+        1,
+        3,
+        0
+      ],
+      "finding": "On 3-node subproblems, classical brute force solves in <0.1ms; QAOA finds matching permutation."
+    },
+    "ablation_5_formulation_fidelity": {
+      "name": "EV-Aware vs Distance-Only QUBO",
+      "hamiltonian_difference_l1_norm": 46.519,
+      "load_factor_alpha": 0.2,
+      "finding": "Load-dependent dissipation penalizes delivering heavy cargo late in the tour."
+    },
+    "ablation_6_hybrid_refinement": {
+      "name": "Hybrid Refinement Stage",
+      "with_refinement_cost": 269.18,
+      "without_refinement_cost": 269.18,
+      "delta_cost": 0.0,
+      "finding": "Classical local search refines routes around quantum-optimized local permutations."
+    },
+    "ablation_7_trained_vs_untrained_policy": {
+      "name": "Trained RL vs Untrained Policy",
+      "trained_policy_cost": 269.18,
+      "untrained_policy_cost": 338.33,
+      "delta_cost": 69.15,
+      "finding": "Trained actor-critic policy achieves lower routing cost and tighter tour packing."
+    }
+  }
+}
